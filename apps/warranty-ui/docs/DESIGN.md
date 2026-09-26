@@ -19,7 +19,8 @@ The design system and screen designs for the warranty app on iOS, Android and We
 - **Name:** Jaminly (from Malay *jaminan*, "guarantee"). Always written "Jaminly" in UI copy, "jaminly" in identifiers.
 - **Personality:** trustworthy, tidy, quietly helpful. Like a well-organised drawer.
 - **Voice:** plain and short. Say "Expires in 12 days", not "Your warranty is about to reach its expiration date!".
-- **Brand colour:** the blue already used for the splash screen (`#208AEF`), used for the logo, splash and illustrations. Buttons and text use darker or lighter shades that pass contrast checks (see below).
+- **Brand colour:** `#0969DA` (the `primary` token) for the logo, app icon, splash and buttons.
+- **Logo:** a shield with a receipt strip folded into a check mark; the torn end shows it's a receipt, the lighter short arm is the back of the folded paper. Masters in `assets/logo/` (`jaminly-mark.svg` in colour, `jaminly-icon.svg` as the app icon). Regenerate the PNG icons with `swift scripts/render-icons.swift`.
 
 ## 3. Design Tokens
 
@@ -44,7 +45,7 @@ These replace and extend `src/constants/theme.ts`, keeping its existing key name
 | `danger` | `#CF222E` | `#F85149` | Expired, delete, errors |
 | `dangerBg` | `#FFEBE9` | `#2D1214` | Expired badge fill, error banner |
 
-Every text/background pair above meets **WCAG AA (4.5:1)**. `#208AEF` is **not** used for text or buttons with white labels, because it only reaches about 3.4:1 against white.
+Every text/background pair above meets **WCAG AA (4.5:1)**. The template's lighter blue `#208AEF` is no longer used: it only reaches about 3.4:1 against white.
 
 ### 3.2 Typography
 
@@ -299,7 +300,6 @@ Grouped list:
 
 ## 11. Open Design Questions
 
-1. Logo and app icon for Jaminly. The icon currently comes from the Expo template.
-2. Illustration style for empty states: line icons (cheap, consistent) or custom illustrations?
-3. Should Home group warranties by category instead of by expiry?
-4. Should there be onboarding screens, or just the empty-state prompt? (Recommendation: empty state only.)
+1. Illustration style for empty states: line icons (cheap, consistent) or custom illustrations?
+2. Should Home group warranties by category instead of by expiry?
+3. Should there be onboarding screens, or just the empty-state prompt? (Recommendation: empty state only.)

@@ -74,7 +74,7 @@ Priority: **P0** = MVP must-have, **P1** = should-have for launch, **P2** = late
 | AUTH-2 | First Google sign-in auto-creates the account (no separate register screen). | P0 |
 | AUTH-3 | Session persists across app restarts (token in secure storage on native; http-only cookie or secure storage on web). | P0 |
 | AUTH-4 | Sign out from settings; clears local cache. | P0 |
-| AUTH-5 | Delete account + all data (required by App Store / Play policy). | P0 |
+| AUTH-5 | Delete account + all data (required by App Store / Play policy). User types "delete", then enters a one-time code emailed to them. | P0 |
 | AUTH-6 | Unauthenticated users are redirected to `(auth)/login`; authenticated to `(app)`. | P0 |
 
 > Note: current `src/app/(auth)/register.tsx` becomes unnecessary with Google-only sign-in.
@@ -196,7 +196,8 @@ Expected API surface (for backend team):
 ```
 POST   /auth/google            { idToken } → { accessToken, refreshToken, user }
 POST   /auth/refresh
-DELETE /me                     # delete account
+POST   /me/deletion            # email a one-time code to confirm account deletion
+DELETE /me                     { code } → deletes the account and all data
 GET    /warranties?status=&category=&q=
 POST   /warranties
 GET    /warranties/:id

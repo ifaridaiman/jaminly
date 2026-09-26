@@ -1,5 +1,8 @@
 import type { ApiClient, Category, Warranty } from './types';
 
+/** The mock backend's emailed code. Shown as a dev hint while EXPO_PUBLIC_USE_MOCK_API is on. */
+export const MOCK_DELETION_CODE = '123456';
+
 const delay = () => new Promise((r) => setTimeout(r, 300)); // fake latency so loading states are visible
 
 const DAY = 86_400_000;
@@ -44,6 +47,22 @@ const warranties: Warranty[] = [
   seed('w6', 'Sony WH-1000XM5', 'Sony', 'electronics', 'Sony Centre', 380, 12, 100),
 ];
 
+// A fully filled-in example so the detail screen shows every section.
+Object.assign(warranties[0], {
+  model: 'QA55Q60D',
+  serialNumber: '0A7K3PQR',
+  price: { amount: 2999, currency: 'MYR' },
+  coverage: {
+    covered: ['Parts', 'Labour', 'Panel (2 years)'],
+    notCovered: ['Accidental damage', 'Water damage'],
+    notes: 'Panel has its own 2-year cover. Keep the box for returns.',
+  },
+  proofOfPurchase: [
+    { id: 'w1-r1', url: '', mimeType: 'image/jpeg', sizeBytes: 0 },
+    { id: 'w1-r2', url: '', mimeType: 'application/pdf', sizeBytes: 0 },
+  ],
+});
+
 export const mockApi: ApiClient = {
   async listWarranties() {
     await delay();
@@ -70,5 +89,19 @@ export const mockApi: ApiClient = {
     if (i === -1) throw new Error('Warranty not found');
     warranties[i] = { ...warranties[i], ...structuredClone(input), updatedAt: new Date().toISOString() };
     return structuredClone(warranties[i]);
+  },
+  async deleteWarranty(id) {
+    await delay();
+    const i = warranties.findIndex((w) => w.id === id);
+    if (i !== -1) warranties.splice(i, 1);
+  },
+  async requestAccountDeletion() {
+    await delay();
+    return { email: 'demo@jaminly.app', resendAfterSeconds: 30 };
+  },
+  async confirmAccountDeletion(code) {
+    await delay();
+    if (code !== MOCK_DELETION_CODE) throw new Error("That code isn't right. Check the email or send a new one.");
+    warranties.length = 0;
   },
 };

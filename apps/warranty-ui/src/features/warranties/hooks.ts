@@ -22,3 +22,14 @@ export const useCreateWarranty = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['warranties'] }),
   });
 };
+
+export const useDeleteWarranty = (id: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.deleteWarranty(id),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: ['warranties', id] });
+      return qc.invalidateQueries({ queryKey: ['warranties'] });
+    },
+  });
+};

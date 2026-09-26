@@ -2,7 +2,7 @@
 // Run: node src/features/warranties/status.check.ts
 import assert from 'node:assert/strict';
 
-import { addMonths, daysUntil, expiryLabel, getStatus, sortWarranties } from './status.ts';
+import { addMonths, badgeLabel, percentUsed, daysUntil, expiryLabel, getStatus, sortWarranties } from './status.ts';
 import { isValidDate, validateWarranty } from './validate.ts';
 
 const today = new Date(2026, 8, 26); // 26 Sep 2026
@@ -15,6 +15,11 @@ assert.equal(getStatus('2026-10-27', today), 'active');
 assert.equal(expiryLabel('2026-09-26', today), 'Expires today');
 assert.equal(expiryLabel('2026-09-27', today), 'Expires in 1 day');
 assert.equal(expiryLabel('2026-09-23', today), 'Expired 3 days ago');
+assert.equal(badgeLabel('2026-10-08', today), '12 days left');
+assert.equal(badgeLabel('2026-09-27', today), '1 day left');
+assert.equal(badgeLabel('2026-09-26', today), 'Expires today');
+assert.equal(badgeLabel('2027-09-26', today), 'Active');
+assert.equal(badgeLabel('2026-09-25', today), 'Expired');
 
 const w = (id: string, expiryDate: string, createdAt: string, updatedAt: string) =>
   ({ id, expiryDate, createdAt, updatedAt }) as never;
@@ -28,6 +33,10 @@ const ids = (key: 'expiry' | 'created' | 'updated') => sortWarranties(list, key,
 assert.deepEqual(ids('expiry'), ['soon', 'later', 'expired-recent', 'expired-old']);
 assert.deepEqual(ids('created'), ['soon', 'expired-old', 'expired-recent', 'later']);
 assert.deepEqual(ids('updated'), ['expired-old', 'soon', 'later', 'expired-recent']);
+assert.equal(percentUsed('2025-09-26', '2027-09-26', today), 50);
+assert.equal(percentUsed('2026-09-26', '2027-09-26', today), 0);
+assert.equal(percentUsed('2024-01-01', '2025-01-01', today), 100);
+assert.equal(percentUsed('2026-10-01', '2027-10-01', today), 0);
 console.log('status checks passed');
 
 assert.equal(addMonths('2026-01-31', 1), '2026-02-28');

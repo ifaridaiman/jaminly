@@ -1,27 +1,32 @@
-import { router, Stack } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Stack } from 'expo-router';
+import type { ComponentProps } from 'react';
 
-import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 
-function AddButton() {
-  const theme = useTheme();
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Add warranty" hitSlop={12} onPress={() => router.push('/warranty/new')}>
-      <ThemedText style={{ color: theme.primary, fontSize: 28, lineHeight: 32, paddingHorizontal: 8 }}>+</ThemedText>
-    </Pressable>
-  );
-}
+// Pop-up sheets: iOS page sheet, Android full-screen modal, web dialog (desktop) or bottom sheet (phone).
+// Web needs EXPO_UNSTABLE_WEB_MODAL=1 (see .env); without it these open as normal pages.
+const popup: ComponentProps<typeof Stack.Screen>['options'] = {
+  presentation: 'modal',
+  headerShown: false,
+  sheetAllowedDetents: [0.94],
+};
 
 export default function AppLayout() {
+  const theme = useTheme();
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{ title: 'Warranties', headerLargeTitle: true, headerRight: () => <AddButton /> }}
-      />
-      <Stack.Screen name="warranty/new" options={{ title: 'New warranty', presentation: 'modal' }} />
-      <Stack.Screen name="warranty/[id]/edit" options={{ title: 'Edit warranty', presentation: 'modal' }} />
+    <Stack
+      screenOptions={{
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: theme.background },
+        headerTintColor: theme.primary,
+        headerTitleStyle: { color: theme.text },
+      }}>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Warranties' }} />
+      <Stack.Screen name="warranty/[id]/index" options={popup} />
+      <Stack.Screen name="warranty/new" options={popup} />
+      <Stack.Screen name="warranty/[id]/edit" options={popup} />
+      <Stack.Screen name="delete-account" options={popup} />
+      <Stack.Screen name="warranty/[id]/receipt" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
     </Stack>
   );
 }

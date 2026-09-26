@@ -121,7 +121,8 @@ function RootNavigator() {
 export interface ApiClient {
   signInWithGoogle(idToken: string): Promise<{ user: User; accessToken: string; refreshToken: string }>;
   getMe(): Promise<User>;
-  deleteMe(): Promise<void>;
+  requestAccountDeletion(): Promise<{ email: string; resendAfterSeconds: number }>; // emails a code
+  confirmAccountDeletion(code: string): Promise<void>; // server checks the code, then deletes
   listWarranties(q?: WarrantyQuery): Promise<Warranty[]>;
   getWarranty(id: string): Promise<Warranty>;
   createWarranty(input: WarrantyInput): Promise<Warranty>;

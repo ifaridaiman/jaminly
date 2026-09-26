@@ -1,5 +1,11 @@
 {
   "name": "warranty-app",
   "private": true,
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "concurrently -n api,ui -c blue,green \"PORT=3001 pnpm --filter warranty-api start:dev\" \"pnpm --filter warranty-ui start -- --port 8081\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
 }
