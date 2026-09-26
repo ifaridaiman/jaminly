@@ -123,7 +123,6 @@ export default function DeleteAccountScreen() {
               keyboardType="number-pad"
               textContentType="oneTimeCode"
               autoComplete="one-time-code"
-              maxLength={CODE_LENGTH}
               autoFocus
               onSubmitEditing={() => canDelete && confirmDeletion()}
               style={[styles.input, styles.codeInput, { color: theme.text, backgroundColor: theme.backgroundElement }]}
