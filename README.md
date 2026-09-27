@@ -63,3 +63,9 @@ pnpm --filter warranty-api start:dev
 ## License
 
 Open source (MIT, TBC).
+
+
+## Plan
+
+To add AI pipeline to scan the warranties to fill up the documentation by it self. 
+User will add their own 

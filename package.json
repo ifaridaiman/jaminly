@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently -n api,ui -c blue,green \"PORT=3001 pnpm --filter warranty-api start:dev\" \"pnpm --filter warranty-ui start -- --port 8081\""
   },
-  "devDependencies": {
+  "devDependencies": { 
     "concurrently": "^9.0.0"
   }
 }

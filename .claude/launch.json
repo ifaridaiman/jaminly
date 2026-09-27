@@ -1,6 +1,30 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "warranty-ui-web", "runtimeExecutable": "pnpm", "runtimeArgs": ["--dir", "apps/warranty-ui", "exec", "expo", "start", "--web", "--port", "8082"], "port": 8082 }
+    {
+      "name": "warranty-ui-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "apps/warranty-ui",
+        "exec",
+        "expo",
+        "start",
+        "--web",
+        "--port",
+        "8082"
+      ],
+      "port": 8082
+    },
+    {
+      "name": "warranty-api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "apps/warranty-api",
+        "start:dev"
+      ],
+      "port": 3001
+    }
   ]
 }
