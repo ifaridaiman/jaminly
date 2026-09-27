@@ -36,11 +36,19 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f6937d10-0ad3-4490-af2c-3d14d078df0a"
+      }
+    },
+    "owner": "sayataktahu"
   }
 }

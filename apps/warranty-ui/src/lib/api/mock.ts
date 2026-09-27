@@ -1,7 +1,4 @@
-import type { ApiClient, Category, Warranty } from './types';
-
-/** The mock backend's emailed code. Shown as a dev hint while EXPO_PUBLIC_USE_MOCK_API is on. */
-export const MOCK_DELETION_CODE = '123456';
+import type { Category, Warranty, WarrantyApi } from './types';
 
 const delay = () => new Promise((r) => setTimeout(r, 300)); // fake latency so loading states are visible
 
@@ -63,7 +60,7 @@ Object.assign(warranties[0], {
   ],
 });
 
-export const mockApi: ApiClient = {
+export const mockApi: WarrantyApi = {
   async listWarranties() {
     await delay();
     return structuredClone(warranties);
@@ -94,14 +91,5 @@ export const mockApi: ApiClient = {
     await delay();
     const i = warranties.findIndex((w) => w.id === id);
     if (i !== -1) warranties.splice(i, 1);
-  },
-  async requestAccountDeletion() {
-    await delay();
-    return { email: 'demo@jaminly.app', resendAfterSeconds: 30 };
-  },
-  async confirmAccountDeletion(code) {
-    await delay();
-    if (code !== MOCK_DELETION_CODE) throw new Error("That code isn't right. Check the email or send a new one.");
-    warranties.length = 0;
   },
 };

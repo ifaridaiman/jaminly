@@ -21,8 +21,11 @@ src/
   app/                          # Routes only (Expo Router). Every file is a screen.
     _layout.tsx                 # Providers + auth gate (Stack.Protected)
     (auth)/
-      _layout.tsx
-      login.tsx                 # "Continue with Google"
+      _layout.tsx               # Stack; back button on everything but login
+      login.tsx                 # email + password, "Continue with Google"
+      register.tsx
+      verify-email.tsx          # reads the pending email from the session, not the URL
+      forgot-password.tsx       # two steps on one screen
     (app)/
       _layout.tsx               # Tabs: Home, Settings
       index.tsx                 # Home: expiring soon + all warranties
@@ -35,9 +38,10 @@ src/
 
   features/                     # One folder per product area
     auth/
-      session-provider.tsx      # SessionContext: user, signIn, signOut, isLoading
-      google-sign-in.ts         # native implementation
-      google-sign-in.web.ts     # web implementation
+      session-provider.tsx      # user, sign-in method, pendingEmail, startSession(), signOut()
+      google-button.tsx         # "Continue with Google" (mock today; google-signin at M1)
+      validate.ts               # email / new-password rules, same as the API DTOs
+      auth-screen.tsx, or-divider.tsx, dev-code-hint.tsx
     warranties/
       hooks.ts                  # useWarranties, useWarranty, useSaveWarranty, useDeleteWarranty
       status.ts                 # getExpiryDate(), getStatus()  ← pure, tested
@@ -72,7 +76,7 @@ Rules:
 - `features/X` may import `lib/` and `components/`. It does not import another feature's internals, only what that feature exports on purpose (such as `useSession`).
 - `components/ui` knows nothing about warranties.
 
-**Clean-up from the template:** delete `register.tsx` (Google-only), `explore` tab, `hint-row`, `web-badge`, `animated-icon*` and the React/Expo logo images once real screens replace them.
+**Clean-up from the template:** delete the `explore` tab, `hint-row`, `web-badge`, `animated-icon*` and the React/Expo logo images once real screens replace them.
 
 ## 3. Navigation & Auth Gate
 
@@ -184,11 +188,27 @@ Dates are stored as ISO `YYYY-MM-DD` strings and compared as calendar dates in t
 
 ## 5. Authentication
 
-| Mode | How it works |
+Email/password is the main path; Google is an alternative on the same account (API ARCHITECTURE §5 has the linking rules).
+
+| Flow | Screens | API calls |
+|---|---|---|
+| Sign up | `register` → `verify-email` | `register` → `verifyEmail` (returns the session) |
+| Sign in | `login` | `login`; `EMAIL_NOT_VERIFIED` → set `pendingEmail`, go to `verify-email` |
+| Forgot password | `forgot-password` (email, then code + new password) | `forgotPassword` → `resetPassword` (returns the session) |
+| Google | button on `login` and `register` | `signInWithGoogle(idToken)` |
+
+- Screens call the API client and hand the result to `startSession(session, method)`. The session remembers the method only to show "Signed in with Google / email" in Settings.
+- The email waiting for a code lives in `SessionProvider.pendingEmail`, not a URL param, so it doesn't end up in web history. Reloading `verify-email` without it redirects to login.
+- Errors are `ApiError { code, message, fields }` (`lib/api/errors.ts`). Screens branch on `code`, show `message` as-is, and put `fields[name]` under the matching input.
+- **Always the real API** (`lib/api/http.ts`), even while warranties are mocked. Locally: `pnpm dev` at the repo root (API on 3001) and `docker compose up` in `apps/warranty-api`; emailed codes land in MailHog at http://localhost:8025 (a dev-only hint says so).
+- **Tokens:** the access token (15 min) lives only in memory. The refresh token is saved with `lib/storage.ts` (SecureStore on native, `localStorage` on web) and swapped for a fresh session on launch (`api.restoreSession()`), so a reload keeps you signed in. A 401 triggers one refresh and a replay; concurrent 401s share one refresh (each refresh token works once). A failed refresh signs the device out.
+- **Sign out** clears the tokens locally first, then revokes the refresh token on the server (best effort, so it works offline).
+
+| Google mode | How it works |
 |---|---|
-| `EXPO_PUBLIC_MOCK_AUTH=true` (default) | "Continue with Google" signs in immediately as a fake user. Works in Expo Go. |
-| Native, real | `@react-native-google-signin/google-signin` (recommended in the Expo Google auth guide). Needs a **development build**, not Expo Go. Gets an ID token and sends it to `POST /auth/google`. |
-| Web, real | Google Identity Services, which returns an ID token and follows the same backend exchange. Confirm the exact library at M1. |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` empty (default) | The Google button and its "or" divider are hidden. |
+| Native, real | `@react-native-google-signin/google-signin` with `webClientId` (needed to get an ID token). Needs a **development build**. Sends the ID token to `POST /auth/google`. |
+| Web, real | Google Identity Services with the same Web client ID. Confirm the exact library at M1. |
 
 - The backend issues its own access and refresh tokens; the app never trusts the Google token beyond that exchange.
 - **Token storage** (`lib/storage.ts`): `expo-secure-store` on native. SecureStore **doesn't support web**, so `storage.web.ts` uses `localStorage`, with a later move to http-only cookies once the backend supports them.
@@ -225,15 +245,15 @@ Ask for notification permission **after the first warranty is saved**, not at la
 ```ts
 // lib/env.ts
 export const env = {
-  useMockApi: process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false',
-  mockAuth: process.env.EXPO_PUBLIC_MOCK_AUTH !== 'false',
+  useMockApi: process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false', // warranties only
   localReminders: process.env.EXPO_PUBLIC_LOCAL_REMINDERS !== 'false',
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL ?? '',
+  apiBaseUrl: (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, ''),
+  googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
 };
 ```
 
 - `process.env.EXPO_PUBLIC_*` must be written out in full (it's replaced at build time), so read the variables only here.
-- The flags default to **mock on**, so a clone runs without a `.env` file.
+- `.env` (committed, no secrets) points at the local API and turns on web pop-ups. Personal overrides (e.g. a LAN IP for a phone) go in `.env.local`.
 - `.env.example` is committed; `.env` is git-ignored. `EXPO_PUBLIC_*` values end up in the app bundle, so **no secrets** go in them (a Google client ID is fine; a client secret never is).
 - Google config files (`google-services.json`, `GoogleService-Info.plist`) are provided as EAS file env vars, not committed.
 
@@ -250,7 +270,7 @@ To add (always with `npx expo install`):
 | `expo-image-picker`, `expo-document-picker`, `expo-image-manipulator` | proof of purchase | M0 |
 | `expo-notifications` | reminders | M0 |
 | `expo-secure-store` | tokens (native) | M1 |
-| `@react-native-google-signin/google-signin` | Google SSO (native) | M1 |
+| `@react-native-google-signin/google-signin` | Google sign-in (native, optional path) | M1 |
 | `jest-expo`, `jest` | unit tests | M0 |
 
 Deliberately **not** added: a UI kit, NativeWind/Tamagui, Redux/Zustand, a date library, react-hook-form, zod. Add zod only if the backend publishes a shared schema.
@@ -288,6 +308,6 @@ Deliberately **not** added: a UI kit, NativeWind/Tamagui, Redux/Zustand, a date 
 | PRD milestone | Architecture work |
 |---|---|
 | M0 — UI on mocks | Folder structure, `env.ts`, `api/mock.ts`, TanStack Query, auth gate with mock auth, warranty CRUD, local reminders, unit tests |
-| M1 — Real auth | google-sign-in native + web, `storage.ts`, dev build |
+| M1 — Real auth | `http.ts` auth calls + token refresh, `storage.ts`, google-sign-in native + web, dev build |
 | M2 — API | `api/http.ts`, signed uploads, push token registration, turn off local reminders |
 | M3 — OSS release | `.env.example`, CI workflow, CONTRIBUTING |

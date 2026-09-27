@@ -35,7 +35,7 @@ const initials = (name = '') =>
 export default function SettingsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { user, signOut } = useSession();
+  const { user, method, signOut } = useSession();
   const settings = useSettings();
   const [remindersOpen, setRemindersOpen] = useState(false);
   const segmentBg = useColorScheme() === 'dark' ? theme.backgroundSelected : theme.background;
@@ -69,7 +69,7 @@ export default function SettingsScreen() {
           <ThemedText style={styles.name}>{user?.name}</ThemedText>
           <ThemedText themeColor="textSecondary">{user?.email}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Signed in with Google
+            {method === 'google' ? 'Signed in with Google' : 'Signed in with email'}
           </ThemedText>
         </View>
       </View>

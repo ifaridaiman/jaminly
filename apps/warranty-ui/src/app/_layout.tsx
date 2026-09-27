@@ -19,7 +19,8 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { user } = useSession();
+  const { user, isLoading } = useSession();
+  if (isLoading) return null; // restoring the saved session; avoids flashing the login screen
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

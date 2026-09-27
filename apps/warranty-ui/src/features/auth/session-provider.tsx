@@ -1,30 +1,63 @@
-import { createContext, use, useState, type ReactNode } from 'react';
+import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
-import { env } from '@/lib/env';
+import { api, onSessionEnded, type AuthSession, type User } from '@/lib/api';
+import { storage } from '@/lib/storage';
 
-export type User = { id: string; email: string; name: string; avatarUrl?: string };
+export type SignInMethod = 'email' | 'google';
+
+const METHOD_KEY = 'jaminly.signInMethod';
 
 type Session = {
   user: User | null;
-  signIn: () => Promise<void>;
-  signOut: () => void;
+  /** True until the stored session has been restored (or found missing) on launch. */
+  isLoading: boolean;
+  method: SignInMethod | null;
+  /** Email waiting for its verification code. Kept here, not in the URL, so it stays out of web history. */
+  pendingEmail: string | null;
+  setPendingEmail: (email: string | null) => void;
+  /** Called with the result of login / verifyEmail / resetPassword / signInWithGoogle. */
+  startSession: (session: AuthSession, method: SignInMethod) => void;
+  signOut: () => Promise<void>;
 };
 
 const SessionContext = createContext<Session | null>(null);
 
-const MOCK_USER: User = { id: 'mock-user', email: 'demo@jaminly.app', name: 'Demo User' };
-
 export function SessionProvider({ children }: { children: ReactNode }) {
-  // ponytail: in-memory session, lost on reload. Persist tokens (expo-secure-store) at M1.
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [method, setMethod] = useState<SignInMethod | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
-  async function signIn() {
-    if (env.mockAuth) return setUser(MOCK_USER);
-    throw new Error('Google sign-in is not configured yet. Set EXPO_PUBLIC_MOCK_AUTH=true.');
+  useEffect(() => {
+    // A refresh that fails mid-session (revoked elsewhere, account deleted) signs this device out.
+    onSessionEnded(() => {
+      setUser(null);
+      setMethod(null);
+    });
+    Promise.all([api.restoreSession(), storage.get(METHOD_KEY)])
+      .then(([session, how]) => {
+        if (!session) return;
+        setUser(session.user);
+        setMethod(how === 'google' ? 'google' : 'email');
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  function startSession(session: AuthSession, how: SignInMethod) {
+    setUser(session.user);
+    setMethod(how);
+    setPendingEmail(null);
+    void storage.set(METHOD_KEY, how);
+  }
+
+  async function signOut() {
+    setUser(null);
+    setMethod(null);
+    await Promise.all([api.logout(), storage.remove(METHOD_KEY)]);
   }
 
   return (
-    <SessionContext value={{ user, signIn, signOut: () => setUser(null) }}>
+    <SessionContext value={{ user, isLoading, method, pendingEmail, setPendingEmail, startSession, signOut }}>
       {children}
     </SessionContext>
   );

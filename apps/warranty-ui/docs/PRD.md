@@ -12,7 +12,7 @@
 
 ## 1. Summary
 
-Jaminly is a free, open-source personal warranty vault. Users sign in with Google and register the products they buy. Each warranty **must** include a proof of purchase (receipt/invoice photo or PDF). The app stores what the warranty covers and sends reminders before it expires, so users can claim while they still can.
+Jaminly is a free, open-source personal warranty vault. Users sign in with email and password (or Google) and register the products they buy. Each warranty **must** include a proof of purchase (receipt/invoice photo or PDF). The app stores what the warranty covers and sends reminders before it expires, so users can claim while they still can.
 
 ## 2. Problem
 
@@ -35,7 +35,7 @@ Jaminly is a free, open-source personal warranty vault. Users sign in with Googl
 - OCR / automatic receipt parsing (candidate for v2).
 - Sharing warranties with family members / households (v2).
 - Business/fleet asset management.
-- Sign-in methods other than Google.
+- Sign-in methods other than email/password and Google (e.g. Apple, phone number).
 - Subscriptions, payments, or paywalls. The app is free and open source.
 
 ## 4. Target Users
@@ -49,7 +49,9 @@ Jaminly is a free, open-source personal warranty vault. Users sign in with Googl
 ## 5. User Stories
 
 **Auth**
-- As a new user, I sign in with Google so I don't need another password.
+- As a new user, I create an account with my name, email and a password, and confirm my email with a code.
+- As a user who prefers it, I continue with Google instead of choosing a password.
+- As a user who forgot my password, I reset it with a code sent to my email.
 
 **Warranties**
 - As a user, I add a product with its purchase date, warranty length, and proof of purchase.
@@ -67,17 +69,18 @@ Jaminly is a free, open-source personal warranty vault. Users sign in with Googl
 
 Priority: **P0** = MVP must-have, **P1** = should-have for launch, **P2** = later.
 
-### 6.1 Authentication — Google SSO
+### 6.1 Authentication — email/password + Google
 | ID | Requirement | Pri |
 |---|---|---|
-| AUTH-1 | Sign in with Google on iOS, Android, and Web. | P0 |
-| AUTH-2 | First Google sign-in auto-creates the account (no separate register screen). | P0 |
-| AUTH-3 | Session persists across app restarts (token in secure storage on native; http-only cookie or secure storage on web). | P0 |
-| AUTH-4 | Sign out from settings; clears local cache. | P0 |
-| AUTH-5 | Delete account + all data (required by App Store / Play policy). User types "delete", then enters a one-time code emailed to them. | P0 |
-| AUTH-6 | Unauthenticated users are redirected to `(auth)/login`; authenticated to `(app)`. | P0 |
-
-> Note: current `src/app/(auth)/register.tsx` becomes unnecessary with Google-only sign-in.
+| AUTH-1 | Sign up with name, email and password (8–128 characters). Emails are case-insensitive; one account per email. | P0 |
+| AUTH-2 | Sign-up emails a 6-digit code. The account can't sign in until the code is entered (15 min expiry, 5 wrong attempts, resend after 30 s). | P0 |
+| AUTH-3 | Sign in with email and password. Wrong password, unknown email and Google-only account all show "Email or password is incorrect." An unverified account is sent to the code screen with a fresh code. | P0 |
+| AUTH-4 | "Forgot password?" emails a 6-digit code; entering it with a new password signs in and signs out other devices. The screen never says whether the email has an account. | P0 |
+| AUTH-5 | "Continue with Google" on iOS, Android and Web. First Google sign-in creates the account; a Google sign-in whose email matches an email/password account links to it. | P0 |
+| AUTH-6 | Session persists across app restarts (token in secure storage on native; http-only cookie or secure storage on web). | P0 |
+| AUTH-7 | Sign out from settings; clears local cache. | P0 |
+| AUTH-8 | Delete account + all data (required by App Store / Play policy). User types "delete", then enters a one-time code emailed to them. | P0 |
+| AUTH-9 | Unauthenticated users are redirected to `(auth)/login`; authenticated to `(app)`. | P0 |
 
 ### 6.2 Warranty management
 | ID | Requirement | Pri |
@@ -107,7 +110,7 @@ Priority: **P0** = MVP must-have, **P1** = should-have for launch, **P2** = late
 | NOT-7 | In-app "Expiring soon" section on the home screen. | P0 |
 
 ### 6.4 Settings
-- Profile (name, email, avatar from Google) — read-only.
+- Profile (name, email, avatar from Google if linked, and how you signed in) — read-only.
 - Notification preferences (§6.3).
 - About: app version, link to the GitHub repo, license.
 - Sign out, Delete account.
@@ -165,7 +168,10 @@ src/app/
   _layout.tsx                 # root: auth gate
   (auth)/
     _layout.tsx
-    login.tsx                 # "Continue with Google"
+    login.tsx                 # email + password, "Continue with Google"
+    register.tsx              # name, email, password
+    verify-email.tsx          # 6-digit code
+    forgot-password.tsx       # email → code + new password
   (app)/
     _layout.tsx               # tabs
     index.tsx                 # Home: expiring soon + all warranties
@@ -176,7 +182,7 @@ src/app/
 ```
 
 Key flows:
-1. **Onboarding:** Login → Google → Notification permission prompt → Empty home with "Add your first warranty".
+1. **Onboarding:** Create account → email code → (or Continue with Google) → Notification permission prompt → Empty home with "Add your first warranty".
 2. **Add warranty:** Attach proof (camera/file) → Product details → Warranty length (auto expiry) → Coverage → Reminders → Save.
 3. **Reminder:** Push → Warranty detail → View receipt.
 
@@ -186,14 +192,20 @@ The backend isn't ready. The UI talks to a single data layer that switches betwe
 
 | Flag | Default (now) | Purpose |
 |---|---|---|
-| `EXPO_PUBLIC_USE_MOCK_API` | `true` | Use in-memory/local-storage mock data instead of HTTP calls. |
-| `EXPO_PUBLIC_API_BASE_URL` | _(empty)_ | Real API base URL when mock is off. |
-| `EXPO_PUBLIC_MOCK_AUTH` | `true` | Skip real Google OAuth; sign in as a fake user. Lets UI work before OAuth client IDs exist. |
+| `EXPO_PUBLIC_USE_MOCK_API` | `true` | **Warranties only**: in-memory mock data until the API's warranty endpoints exist. Sign-in and account calls always use the real API. |
+| `EXPO_PUBLIC_API_BASE_URL` | `http://localhost:3001/api/v1` | The Jaminly API. Use the machine's LAN IP on a physical phone (`.env.local`). |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | _(empty)_ | Google Web client ID. Empty hides "Continue with Google". |
 | `EXPO_PUBLIC_LOCAL_REMINDERS` | `true` | Schedule reminders as on-device local notifications until server-side scheduling exists. |
 
 Expected API surface (for backend team):
 
 ```
+POST   /auth/register          { name, email, password } → { email, resendAfterSeconds } (emails a code)
+POST   /auth/verify-email      { email, code } → { accessToken, refreshToken, user }
+POST   /auth/verify-email/resend { email }
+POST   /auth/login             { email, password } → { accessToken, refreshToken, user }
+POST   /auth/password/forgot   { email }  (emails a code)
+POST   /auth/password/reset    { email, code, password } → { accessToken, refreshToken, user }
 POST   /auth/google            { idToken } → { accessToken, refreshToken, user }
 POST   /auth/refresh
 POST   /me/deletion            # email a one-time code to confirm account deletion
@@ -221,7 +233,7 @@ POST   /me/push-tokens         # register Expo push token
 
 - **Repo hygiene:** `README` (setup, screenshots), `CONTRIBUTING.md`, issue/PR templates, `CODE_OF_CONDUCT.md`.
 - **No secrets in the repo:** all keys (Google OAuth client IDs, API URL) come from `.env`; ship a `.env.example`. Mock flags default to `true` so a fresh clone runs with zero setup.
-- **Self-hosting:** document how to run your own backend and point the app at it via `EXPO_PUBLIC_API_BASE_URL`, and how to create your own Google OAuth client IDs.
+- **Self-hosting:** document how to run your own backend and point the app at it via `EXPO_PUBLIC_API_BASE_URL`, and how to create your own Google OAuth client IDs (optional: email/password works without them).
 - **License:** current `LICENSE` is the Expo template's (copyright 650 Industries). Replace with your own MIT (or chosen) license before publishing.
 - **Success signals:** GitHub stars, contributors, self-hosted instances, and product usage (sign-in → first warranty ≥ 60%, median add time < 60s, reminder open rate ≥ 30%) if telemetry is opt-in.
 
@@ -239,7 +251,7 @@ POST   /me/push-tokens         # register Expo push token
 | Phase | Scope |
 |---|---|
 | **M0 — UI on mocks** | Navigation, login (mock auth), warranty CRUD with required proof upload, coverage, list/detail, local reminders. All flags on mock. |
-| **M1 — Real auth** | Google SSO on iOS/Android/Web (`MOCK_AUTH=false`), secure session, account deletion. |
+| **M1 — Real auth** | Email/password with email codes, Google on iOS/Android/Web (`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` set), secure session, account deletion. |
 | **M2 — API** | Switch `USE_MOCK_API=false`; uploads via signed URLs; server-side reminders + push token registration + email. |
 | **M3 — Open-source release** | README, CONTRIBUTING, `.env.example`, license, self-hosting guide. |
 | **M4 — Launch** | EAS builds, store listings, privacy policy. |

@@ -1,7 +1,10 @@
+import { httpAuthApi } from './http';
 import { mockApi } from './mock';
+import type { ApiClient } from './types';
 
-export { MOCK_DELETION_CODE } from './mock';
+export { ApiError, errorMessage } from './errors';
+export { onSessionEnded } from './http';
 
-// ponytail: mock only. Add http.ts and switch on env.useMockApi at M2.
-export const api = mockApi;
+// Auth + account: real API. Warranties: mock until the API's warranty endpoints exist (M2).
+export const api: ApiClient = { ...mockApi, ...httpAuthApi };
 export type * from './types';
