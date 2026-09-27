@@ -93,6 +93,8 @@ describe('warranties + uploads + notifications (e2e)', () => {
       .send({ mimeType, sizeBytes: bytes.length, name: 'receipt.pdf' })
       .expect(201);
     const { attachment, uploadUrl, headers } = res.body.data;
+    // A checksum signed in at presign time would be of an empty body; S3/R2 would reject the upload.
+    expect(uploadUrl).not.toMatch(/x-amz-checksum/i);
     const put = await fetch(uploadUrl, { method: 'PUT', headers, body: bytes });
     expect(put.status).toBe(200);
     return attachment as { id: string; url: string };
@@ -460,6 +462,18 @@ describe('warranties + uploads + notifications (e2e)', () => {
         .send({ proofOfPurchase: res.body.data.proofOfPurchase, store: '' })
         .expect(200)
         .expect((r) => expect(r.body.data).not.toHaveProperty('store')); // "" clears
+
+      await http()
+        .patch(`/api/v1/warranties/${w.id}`)
+        .set(u.auth)
+        .send({ price: { amount: 10, currency: 'MYR' } })
+        .expect(200);
+      await http()
+        .patch(`/api/v1/warranties/${w.id}`)
+        .set(u.auth)
+        .send({ price: null })
+        .expect(200)
+        .expect((r) => expect(r.body.data).not.toHaveProperty('price')); // null clears
     });
 
     it('changing the purchase date recomputes expiry unless one is given', async () => {

@@ -124,10 +124,11 @@ export class CreateWarrantyDto {
   @IsYmd()
   purchaseDate!: string;
 
+  /** Omit to leave unchanged; null clears it (on PATCH). */
   @IsOptional()
   @ValidateNested()
   @Type(() => PriceDto)
-  price?: PriceDto;
+  price?: PriceDto | null;
 
   @IsInt({ message: 'Enter a number of months between 1 and 600.' })
   @Min(1, { message: 'Enter a number of months between 1 and 600.' })

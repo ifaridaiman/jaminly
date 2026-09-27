@@ -241,9 +241,10 @@ model Reminder {
   warrantyId String
   warranty   Warranty  @relation(fields: [warrantyId], references: [id], onDelete: Cascade)
   offsetDays Int
+  expiryDate DateTime  @db.Date              // part of the key: a new expiry means new reminders
   sendAt     DateTime                        // 09:00 user-local, stored as UTC instant
   sentAt     DateTime?
-  @@unique([warrantyId, offsetDays])
+  @@unique([warrantyId, offsetDays, expiryDate])
   @@index([sentAt, sendAt])
 }
 
@@ -343,28 +344,32 @@ App ── any request, Authorization: Bearer <accessToken>
 6. Reads: attachment.url = presigned GET (1 h), signed locally per request
 ```
 
+- The S3 clients set `requestChecksumCalculation: 'WHEN_REQUIRED'`. Otherwise recent AWS SDKs sign a CRC32 of the (empty) body into presigned PUT URLs, which S3/R2 then enforce against the real file and reject. An e2e test asserts upload URLs carry no `x-amz-checksum`.
+- Browsers upload straight to the bucket, so it needs CORS for the web app's origins (`PUT`, `GET`, `HEAD`). `docker compose` sets it for `http://localhost:8081` and `:8082` in `rustfs-init`; production buckets need the same rule for the real web origin.
 - Bucket is private with SSE on. Keys are `users/<userId>/<attachmentId>`, so a user's data can be listed and deleted by prefix.
 - Deleting files: after the DB transaction commits, `DeleteObjects` for the removed keys. If that fails, the hourly cleanup (§7) catches it by listing the user prefix against the DB. A stray file costs cents; a DB row pointing to a missing file breaks the UI, so the DB goes first.
 - HEIC: stored as-is for v1 (PRD open question 3).
 
 ## 7. Reminders
 
-Reminders are **materialised rows**, one per (warranty, offset), so "send once" is a DB fact rather than a calculation.
+Reminders are **materialised rows**, one per (warranty, offset, expiry date), so "send once" is a DB fact rather than a calculation.
 
 **Planning** (`RemindersService.plan(warrantyId)`), called in the same transaction as warranty create/update, and for all of a user's warranties when their timezone changes:
 1. Delete that warranty's unsent `Reminder` rows.
 2. For each offset: `sendAt = 09:00 on (expiryDate − offset)` in the user's timezone, converted to UTC (`Intl` for the offset, no date library). Skip if in the past.
-3. Insert rows; `@@unique([warrantyId, offsetDays])` blocks duplicates.
+3. Insert rows with `skipDuplicates`; `@@unique([warrantyId, offsetDays, expiryDate])` means an already-sent reminder is never re-created by a later save, while a changed expiry date gets fresh ones.
 
 **Sending** (`@Cron('*/15 * * * *')`, `@nestjs/schedule`):
 ```sql
-SELECT … FROM "Reminder"
-WHERE "sentAt" IS NULL AND "sendAt" <= now() AND "sendAt" > now() - interval '24 hours'
-ORDER BY "sendAt" LIMIT 500
-FOR UPDATE SKIP LOCKED
+UPDATE "Reminder" SET "sentAt" = now()
+WHERE id IN (SELECT id FROM "Reminder"
+             WHERE "sentAt" IS NULL AND "sendAt" <= now()
+             ORDER BY "sendAt" LIMIT 500 FOR UPDATE SKIP LOCKED)
+RETURNING id, "warrantyId", "offsetDays", "sendAt"
 ```
-- `SKIP LOCKED` makes it safe with more than one API instance. The 24 h window is the catch-up after downtime; older ones are marked sent without sending (a stale "7 days left" is worse than none).
-- Per reminder: push to every `PushToken` of the user if `pushEnabled`; email if `emailEnabled`. Then set `sentAt`. A send failure is logged; the reminder is still marked sent (no retry storms). ponytail: no retries; add a `attempts` column if delivery failures show up in logs.
+- **Claim, then send**: one statement marks the batch sent and returns it, so two instances (or two overlapping runs) can never both send a reminder. A crash mid-send loses that reminder rather than doubling it. Batches repeat until fewer than 500 come back.
+- Claimed reminders more than 24 h late (downtime catch-up window) are dropped without sending: a stale "7 days left" is worse than none.
+- Per reminder: push to every `PushToken` of the user if `pushEnabled`; email if `emailEnabled`. A send failure is logged; the reminder is still marked sent (no retry storms). ponytail: no retries; add a `attempts` column if delivery failures show up in logs.
 - Push goes through `PushSender` (below). Tokens it reports as invalid are deleted.
 
 ### Push providers
@@ -431,6 +436,7 @@ export const PUSH_SENDER = Symbol('PushSender');
 | `SMTP_URL` | `smtp://localhost:1025` | MailHog in dev |
 | `MAIL_FROM` | `Jaminly <no-reply@jaminly.app>` | |
 | `WEB_APP_URL` | `http://localhost:8081` | links in emails |
+| `S3_PUBLIC_ENDPOINT` | empty | host devices use for presigned URLs (LAN IP in dev on a phone, public bucket endpoint in production); empty = `S3_ENDPOINT` |
 | `CORS_ORIGINS` | `http://localhost:8081` | comma-separated |
 | `PUSH_PROVIDER` | `expo` | `expo` \| `log`; see §7 |
 | `EXPO_ACCESS_TOKEN` | empty | only if Expo push security is on; secret |
@@ -751,6 +757,6 @@ First run: `cp .env.example .env && docker compose up -d && pnpm db:migrate`.
 | PRD milestone | Architecture work |
 |---|---|
 | M1 — Real auth | **Done (foundations):** `env.ts`, Prisma + migrations (User, RefreshToken, EmailCode), response contract (§10: envelope, errors, request context, versioning), `prisma`, `health`, throttler, docker compose, lint rule for vendor imports. **Done:** `mail`, `storage` (deletePrefix), `google`, `auth` (email/password with emailed codes + Google, account linking), `users` incl. account deletion. **Deferred to M2:** hourly cleanup crons for expired codes/refresh tokens (need `@nestjs/schedule`), timezone capture. |
-| M2 — API | Warranty/Attachment/Reminder/PushToken tables, `attachments`, `push`, `notifications`, `warranties`, cleanup crons, e2e isolation tests |
+| M2 — API | **Done:** Warranty/Attachment/Reminder/PushToken tables, `attachments`, `push` (Expo + log), `notifications` (settings, push tokens, reminders), `warranties`, hourly cleanups (unlinked uploads, expired codes, unverified sign-ups, expired refresh tokens), optional per-user limits, `test/warranties.e2e-spec.ts`. |
 | M3 — OSS release | `.env.example`, README self-hosting guide, CI workflow |
 | M4 — Launch | Production deploy, backups, log review for PII |

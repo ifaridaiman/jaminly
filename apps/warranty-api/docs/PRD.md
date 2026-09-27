@@ -12,7 +12,7 @@
 
 ## 1. Summary
 
-The backend for Jaminly, the open-source personal warranty vault. It replaces the UI's in-memory mock (`warranty-ui/src/lib/api/mock.ts`) so that the app can run with `EXPO_PUBLIC_USE_MOCK_API=false` and `EXPO_PUBLIC_MOCK_AUTH=false`.
+The backend for Jaminly, the open-source personal warranty vault. It replaced the UI's in-memory mock; since M2 the app talks only to this API.
 
 It does five things:
 1. Signs users in with email and password (verified by an emailed code) or a Google ID token, and issues Jaminly session tokens.
@@ -57,9 +57,9 @@ Source of truth: `warranty-ui/src/lib/api/types.ts`. All paths below are under `
 | token refresh | planned (M1) | `POST /auth/refresh` |
 | sign out | planned (M1) | `POST /auth/logout` |
 | `getMe()` | planned (M1) | `GET /me` |
-| `uploadProof(file)` | planned (M2) | `POST /uploads` + `PUT` to signed URL |
-| `saveNotificationSettings(s)` | planned (M2, today in-memory `SettingsProvider`) | `GET` / `PUT /me/notification-settings` |
-| `registerPushToken(token)` | planned (M2) | `POST /me/push-tokens` |
+| upload on save (inside `createWarranty`/`updateWarranty`) | used | `POST /uploads` + `PUT` to signed URL |
+| `getNotificationSettings()` / `saveNotificationSettings(s)` | used | `GET` / `PUT /me/notification-settings` |
+| `registerPushToken(token, platform)` / `removePushToken(token)` | used | `POST /me/push-tokens`, `DELETE /me/push-tokens/:token` |
 
 ## 4. Functional Requirements
 
@@ -88,7 +88,7 @@ Priority: **P0** = needed to turn the mock flags off, **P1** = should-have for l
 | API-WAR-4 | `expiryDate` is accepted from the client (user may override). If omitted, server computes `purchaseDate + warrantyMonths` with month-end clamping (same rule as UI `addMonths`). Must be ≥ `purchaseDate`. | P0 |
 | API-WAR-5 | `proofOfPurchase` in requests is a list of attachment **ids** previously uploaded by the same user (§4.3). Unknown or foreign ids → 422 `ATTACHMENT_NOT_FOUND`. Existing `{ id, … }` objects from a GET are accepted too (UI sends back what it received on edit). | P0 |
 | API-WAR-6 | `reminderOffsetsDays`: integers 0–365, max 10, de-duplicated. Empty array = reminders off. Default when omitted: user's `defaultReminders`. | P0 |
-| API-WAR-7 | `PATCH` accepts a full or partial body; missing fields are left unchanged. Changing expiry or offsets reschedules reminders. | P0 |
+| API-WAR-7 | `PATCH` accepts a full or partial body; missing fields are left unchanged, `""` clears an optional text field and `price: null` clears the price. Changing purchase date or length without an explicit `expiryDate` recomputes it. Every save reschedules reminders. | P0 |
 | API-WAR-8 | `DELETE` removes the warranty, its attachments (DB + files) and pending reminders. Idempotent: 204 even if already gone. | P0 |
 | API-WAR-9 | `GET /warranties` returns all of the user's warranties, unpaginated, ordered by `expiryDate` asc. | P0 |
 | API-WAR-10 | Optional `?status=&category=&q=` filters and cursor pagination. | P2 |
@@ -206,7 +206,7 @@ Every JSON response uses one envelope (full spec: [ARCHITECTURE §10](./ARCHITEC
 | Phase | API scope | UI flag flipped |
 |---|---|---|
 | **M1 — Real auth** | Project setup (DB, config, errors), Google exchange, JWT + refresh, `GET /me`, account deletion with email code, `/health`. | `EXPO_PUBLIC_MOCK_AUTH=false` |
-| **M2 — API** | Warranties CRUD, uploads + signed URLs, notification settings, push tokens, reminder scheduler (push + email), attachment cleanup. | `EXPO_PUBLIC_USE_MOCK_API=false`, `EXPO_PUBLIC_LOCAL_REMINDERS=false` |
+| **M2 — API** ✅ | Warranties CRUD, uploads + signed URLs, notification settings, push tokens, reminder scheduler (push + email), attachment cleanup. | Mock removed from the UI |
 | **M3 — OSS release** | `docker-compose.yml`, `.env.example`, self-hosting guide in README, CI (lint, typecheck, test, e2e). | — |
 | **M4 — Launch** | Production deploy, backups, rate limits tuned, privacy policy data-flow review. | — |
 

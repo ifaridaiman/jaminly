@@ -20,6 +20,10 @@ const client = (endpoint: string | undefined) =>
     endpoint,
     region: env.S3_REGION,
     forcePathStyle: !!endpoint, // RustFS/MinIO-style endpoints use path-style URLs
+    // The SDK otherwise signs a CRC32 of the (empty) body into presigned PUT URLs, which real S3/R2
+    // then enforce against the uploaded file and reject.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
     credentials: {
       accessKeyId: env.S3_ACCESS_KEY_ID,
       secretAccessKey: env.S3_SECRET_ACCESS_KEY,

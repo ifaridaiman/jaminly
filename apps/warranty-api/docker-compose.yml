@@ -30,7 +30,8 @@ services:
       interval: 5s
       retries: 10
 
-  # One-shot: creates the private receipts bucket, then exits.
+  # One-shot: creates the private receipts bucket and lets the web app upload to it
+  # directly (CORS for the Expo web dev servers), then exits. Safe to rerun.
   rustfs-init:
     image: amazon/aws-cli
     depends_on:
@@ -39,9 +40,11 @@ services:
       AWS_ACCESS_KEY_ID: jaminly
       AWS_SECRET_ACCESS_KEY: jaminly-dev-secret
       AWS_DEFAULT_REGION: us-east-1
+      CORS: '{"CORSRules":[{"AllowedOrigins":["http://localhost:8081","http://localhost:8082"],"AllowedMethods":["PUT","GET","HEAD"],"AllowedHeaders":["*"],"MaxAgeSeconds":3600}]}'
     entrypoint: >
-      sh -c "aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket jaminly-receipts 2>/dev/null ||
-             aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket jaminly-receipts"
+      sh -c "(aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket jaminly-receipts 2>/dev/null ||
+      aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket jaminly-receipts) &&
+      aws --endpoint-url http://rustfs:9000 s3api put-bucket-cors --bucket jaminly-receipts --cors-configuration \"$$CORS\""
 
   mailhog:
     image: mailhog/mailhog

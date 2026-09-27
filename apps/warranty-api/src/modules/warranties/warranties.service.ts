@@ -203,8 +203,8 @@ type OptionalColumns = {
   model?: string | null;
   serialNumber?: string | null;
   store?: string | null;
-  priceAmount?: number;
-  priceCurrency?: string;
+  priceAmount?: number | null;
+  priceCurrency?: string | null;
   coverageNotes?: string | null;
 };
 
@@ -216,7 +216,8 @@ function fields(dto: UpdateWarrantyDto): OptionalColumns {
     model: opt(dto.model),
     serialNumber: opt(dto.serialNumber),
     store: opt(dto.store),
-    ...(dto.price !== undefined && {
+    ...(dto.price === null && { priceAmount: null, priceCurrency: null }),
+    ...(dto.price && {
       priceAmount: dto.price.amount,
       priceCurrency: dto.price.currency,
     }),
