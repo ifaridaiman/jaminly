@@ -1,0 +1,24 @@
+/// One row per (warranty, offset, expiry). Sending sets sentAt, so "send once" is a DB fact.
+model Reminder {
+  id         String    @id @default(uuid())
+  warrantyId String
+  warranty   Warranty  @relation(fields: [warrantyId], references: [id], onDelete: Cascade)
+  offsetDays Int
+  expiryDate DateTime  @db.Date // part of the key: a new expiry date means new reminders
+  sendAt     DateTime // 09:00 in the user's timezone, as a UTC instant
+  sentAt     DateTime?
+
+  @@unique([warrantyId, offsetDays, expiryDate])
+  @@index([sentAt, sendAt])
+}
+
+model PushToken {
+  token     String   @id // opaque; format belongs to the provider
+  provider  String // expo | fcm | … ; only rows matching PUSH_PROVIDER are sent
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  String // ios | android
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

@@ -1,0 +1,35 @@
+enum Category {
+  electronics
+  appliance
+  furniture
+  vehicle
+  other
+}
+
+model Warranty {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productName         String
+  brand               String?
+  model               String?
+  serialNumber        String?
+  category            Category
+  store               String?
+  purchaseDate        DateTime @db.Date // calendar date, no timezone
+  priceAmount         Decimal? @db.Decimal(12, 2)
+  priceCurrency       String?  @db.Char(3)
+  warrantyMonths      Int
+  expiryDate          DateTime @db.Date
+  covered             String[]
+  notCovered          String[]
+  coverageNotes       String?
+  reminderOffsetsDays Int[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  attachments Attachment[]
+  reminders   Reminder[]
+
+  @@index([userId, expiryDate])
+}

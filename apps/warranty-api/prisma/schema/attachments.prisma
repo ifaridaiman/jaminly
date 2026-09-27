@@ -1,0 +1,17 @@
+/// A proof-of-purchase file. Created by POST /uploads (warrantyId null), linked when a warranty references it.
+model Attachment {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  warrantyId String? // null until linked; the cleanup job deletes stale unlinked ones
+  warranty   Warranty? @relation(fields: [warrantyId], references: [id], onDelete: Cascade)
+  key        String    @unique // users/<userId>/<id>
+  mimeType   String
+  sizeBytes  Int
+  name       String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([warrantyId])
+  @@index([warrantyId, createdAt])
+}

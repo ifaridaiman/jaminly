@@ -42,9 +42,42 @@ export const env = {
   S3_ACCESS_KEY_ID: required('S3_ACCESS_KEY_ID'),
   S3_SECRET_ACCESS_KEY: required('S3_SECRET_ACCESS_KEY'),
 
+  // Presigned URLs go to devices, so they must use an address the device can reach (e.g. a LAN IP
+  // in dev, the public bucket endpoint in production). Empty = S3_ENDPOINT.
+  S3_PUBLIC_ENDPOINT:
+    process.env.S3_PUBLIC_ENDPOINT || process.env.S3_ENDPOINT || undefined,
+
   SMTP_URL: required('SMTP_URL'),
   MAIL_FROM: required('MAIL_FROM'),
+  /** Links in emails, e.g. reminder emails → <WEB_APP_URL>/warranty/<id>. */
+  WEB_APP_URL: (process.env.WEB_APP_URL || 'http://localhost:8081').replace(
+    /\/$/,
+    '',
+  ),
+
+  PUSH_PROVIDER: pushProvider(),
+  EXPO_ACCESS_TOKEN: process.env.EXPO_ACCESS_TOKEN || undefined,
+
+  // Hosted-instance soft limits. Empty = no limit (self-hosting).
+  USER_WARRANTY_LIMIT: optionalInt('USER_WARRANTY_LIMIT'),
+  USER_STORAGE_LIMIT_MB: optionalInt('USER_STORAGE_LIMIT_MB'),
 };
+
+function pushProvider(): 'expo' | 'log' {
+  const value = process.env.PUSH_PROVIDER || 'expo';
+  if (value !== 'expo' && value !== 'log')
+    throw new Error(`PUSH_PROVIDER must be expo or log, got ${value}.`);
+  return value;
+}
+
+function optionalInt(name: string): number | undefined {
+  const value = process.env[name];
+  if (!value) return undefined;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 0)
+    throw new Error(`${name} must be a non-negative integer.`);
+  return n;
+}
 
 function jwtSecret() {
   const secret = required('JWT_SECRET');

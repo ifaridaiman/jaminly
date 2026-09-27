@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { env } from '../../env';
 import { GoogleModule } from '../../infrastructure/google/google.module';
 import { UsersModule } from '../users';
+import { AuthCleanup } from './auth.cleanup';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtGuard } from './jwt.guard';
@@ -18,6 +19,10 @@ import { JwtGuard } from './jwt.guard';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, { provide: APP_GUARD, useClass: JwtGuard }],
+  providers: [
+    AuthService,
+    AuthCleanup,
+    { provide: APP_GUARD, useClass: JwtGuard },
+  ],
 })
 export class AuthModule {}

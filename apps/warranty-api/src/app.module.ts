@@ -1,13 +1,17 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ApiResponseInterceptor } from './common/api-response/api-response.interceptor';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { env } from './env';
+import { AttachmentsModule } from './modules/attachments';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { NotificationsModule } from './modules/notifications';
 import { UsersModule } from './modules/users';
+import { WarrantiesModule } from './modules/warranties/warranties.module';
 import { LoggerModule } from 'nestjs-pino';
 
 @Module({
@@ -46,9 +50,13 @@ import { LoggerModule } from 'nestjs-pino';
       throttlers: [{ ttl: 60_000, limit: 100 }],
       skipIf: () => env.NODE_ENV === 'test', // Jest sets NODE_ENV=test so suites can sign in repeatedly
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,
+    WarrantiesModule,
+    AttachmentsModule,
+    NotificationsModule,
     HealthModule,
   ],
   providers: [

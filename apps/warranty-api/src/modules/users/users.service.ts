@@ -119,6 +119,35 @@ export class UsersService {
     return user;
   }
 
+  notificationSettings(u: User) {
+    return {
+      push: u.pushEnabled,
+      email: u.emailEnabled,
+      defaultReminders: u.defaultReminders,
+      timezone: u.timezone,
+    };
+  }
+
+  updateNotificationSettings(
+    userId: string,
+    s: {
+      push: boolean;
+      email: boolean;
+      defaultReminders: number[];
+      timezone: string;
+    },
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        pushEnabled: s.push,
+        emailEnabled: s.email,
+        defaultReminders: s.defaultReminders,
+        timezone: s.timezone,
+      },
+    });
+  }
+
   toDto(u: User): UserDto {
     return {
       id: u.id,
