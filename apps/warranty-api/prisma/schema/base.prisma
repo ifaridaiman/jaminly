@@ -1,0 +1,10 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/generated/prisma"
+  moduleFormat        = "cjs"
+  importFileExtension = "" // extensionless, so ts-jest resolves the generated files
+}
+
+datasource db {
+  provider = "postgresql"
+}

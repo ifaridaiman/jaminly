@@ -1,0 +1,11 @@
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    String // rotation chain; reuse of a revoked token revokes the family
+  tokenHash String    @unique // sha256
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
+}

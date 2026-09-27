@@ -1,0 +1,36 @@
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique // stored lower-cased; one account per email
+  emailVerifiedAt  DateTime? // null = signed up with a password and hasn't entered the code yet
+  passwordHash     String? // scrypt; null = Google-only account
+  googleSub        String?   @unique // null = email/password-only account
+  name             String
+  avatarUrl        String?
+  pushEnabled      Boolean   @default(true)
+  emailEnabled     Boolean   @default(false)
+  defaultReminders Int[]     @default([30, 7, 0])
+  timezone         String    @default("UTC") // IANA, e.g. Asia/Kuala_Lumpur
+  createdAt        DateTime  @default(now())
+
+  refreshTokens RefreshToken[]
+  emailCodes    EmailCode[]
+}
+
+enum EmailCodePurpose {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+  DELETE_ACCOUNT
+}
+
+/// One live emailed code per (user, purpose). A new request replaces the old one.
+model EmailCode {
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   EmailCodePurpose
+  codeHash  String // sha256 hex
+  attempts  Int              @default(0)
+  expiresAt DateTime
+  sentAt    DateTime
+
+  @@id([userId, purpose])
+}
