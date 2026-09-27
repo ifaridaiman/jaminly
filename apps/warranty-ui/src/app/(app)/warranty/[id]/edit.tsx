@@ -6,6 +6,7 @@ import { Spacing } from '@/constants/theme';
 import { WarrantyForm } from '@/features/warranties/components/warranty-form';
 import { useUpdateWarranty, useWarranty } from '@/features/warranties/hooks';
 import { useTheme } from '@/hooks/use-theme';
+import { ApiError, errorMessage } from '@/lib/api';
 
 export default function EditWarrantyScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -36,7 +37,8 @@ export default function EditWarrantyScreen() {
       key={data.id}
       initial={data}
       saving={update.isPending}
-      saveError={update.isError ? "Couldn't save. Your changes are still here." : undefined}
+      saveError={update.error ? `${errorMessage(update.error)} Your changes are still here.` : undefined}
+      serverErrors={update.error instanceof ApiError ? update.error.fields : undefined}
       onSubmit={(input) => update.mutate(input, { onSuccess: () => router.back() })}
     />
   );

@@ -1,5 +1,6 @@
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 
+import { unregisterPush } from '@/features/notifications/push';
 import { api, onSessionEnded, type AuthSession, type User } from '@/lib/api';
 import { storage } from '@/lib/storage';
 
@@ -51,6 +52,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    await unregisterPush(); // needs the access token, so before logout
     setUser(null);
     setMethod(null);
     await Promise.all([api.logout(), storage.remove(METHOD_KEY)]);

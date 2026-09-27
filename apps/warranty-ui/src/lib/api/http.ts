@@ -2,7 +2,7 @@ import { env } from '@/lib/env';
 import { storage } from '@/lib/storage';
 
 import { ApiError } from './errors';
-import type { AuthApi, AuthSession } from './types';
+import type { Attachment, AuthApi, AuthSession, Warranty, WarrantyApi, WarrantyInput } from './types';
 
 const REFRESH_TOKEN_KEY = 'jaminly.refreshToken';
 
@@ -115,6 +115,70 @@ export const httpAuthApi: AuthApi = {
     // Best effort: signing out locally must work offline too.
     if (refreshToken) await post('/auth/logout', { refreshToken }).catch(() => undefined);
   },
+  getNotificationSettings: () => request('GET', '/me/notification-settings'),
+  saveNotificationSettings: (settings) => request('PUT', '/me/notification-settings', settings),
+  registerPushToken: (token, platform) => request('POST', '/me/push-tokens', { token, provider: 'expo', platform }),
+  removePushToken: (token) => request('DELETE', `/me/push-tokens/${encodeURIComponent(token)}`),
   requestAccountDeletion: () => request('POST', '/me/deletion'),
   confirmAccountDeletion: (code) => request('DELETE', '/me', { code }),
+};
+
+// ── Warranties ──
+
+/** Picked-but-not-uploaded files carry a device URI (file:, content:, blob:, ph:); uploaded ones a signed https URL. */
+const isLocal = (a: Attachment) => !/^https?:\/\//.test(a.url);
+
+/** POST /uploads, then PUT the bytes straight to storage with the returned URL and headers. */
+async function uploadProof(file: Attachment): Promise<Attachment> {
+  let blob: Blob;
+  try {
+    blob = await (await fetch(file.url)).blob();
+  } catch {
+    throw new ApiError('FILE_UNREADABLE', "Couldn't read one of the receipts. Remove it and add it again.");
+  }
+  const { attachment, uploadUrl, headers } = await request<{
+    attachment: Attachment;
+    uploadUrl: string;
+    headers: Record<string, string>;
+  }>('POST', '/uploads', { mimeType: file.mimeType, sizeBytes: blob.size, ...(file.name && { name: file.name }) });
+  let res: Response;
+  try {
+    res = await fetch(uploadUrl, { method: 'PUT', headers, body: blob });
+  } catch {
+    throw new ApiError('NETWORK_ERROR', "Couldn't upload a receipt. Check your connection and try again.");
+  }
+  if (!res.ok) throw new ApiError('UPLOAD_FAILED', "Couldn't upload a receipt. Please try again.");
+  return attachment;
+}
+
+/**
+ * The body the API accepts. On edit (`forUpdate`) cleared optional fields are sent as "" / null,
+ * because PATCH treats a missing field as "leave unchanged".
+ */
+async function toBody(input: WarrantyInput, forUpdate: boolean) {
+  const proof = await Promise.all(input.proofOfPurchase.map((a) => (isLocal(a) ? uploadProof(a) : a)));
+  const text = (v?: string) => v ?? (forUpdate ? '' : undefined);
+  return {
+    productName: input.productName,
+    brand: text(input.brand),
+    model: text(input.model),
+    serialNumber: text(input.serialNumber),
+    category: input.category,
+    store: text(input.store),
+    purchaseDate: input.purchaseDate,
+    price: input.price ?? (forUpdate ? null : undefined),
+    warrantyMonths: input.warrantyMonths,
+    ...(input.expiryDate && { expiryDate: input.expiryDate }),
+    coverage: { ...input.coverage, notes: input.coverage.notes ?? (forUpdate ? '' : undefined) },
+    proofOfPurchase: proof.map((a) => ({ id: a.id })),
+    reminderOffsetsDays: input.reminderOffsetsDays,
+  };
+}
+
+export const httpWarrantyApi: WarrantyApi = {
+  listWarranties: () => request<Warranty[]>('GET', '/warranties'),
+  getWarranty: (id) => request<Warranty>('GET', `/warranties/${id}`),
+  createWarranty: async (input) => request<Warranty>('POST', '/warranties', await toBody(input, false)),
+  updateWarranty: async (id, input) => request<Warranty>('PATCH', `/warranties/${id}`, await toBody(input, true)),
+  deleteWarranty: (id) => request<void>('DELETE', `/warranties/${id}`),
 };

@@ -12,12 +12,16 @@ import { ThemedText } from '@/components/themed-text';
 import { PRIVACY_URL, REPO_URL } from '@/constants/links';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-provider';
+import { registerForPush } from '@/features/notifications/push';
 import { useSettings, type AppearancePref } from '@/features/settings/settings-provider';
 import { formatReminders } from '@/features/warranties/status';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 
-const REMINDER_OPTIONS = [60, 30, 14, 7, 0].map((d) => ({ value: d, label: d === 0 ? 'On expiry day' : `${d} days before` }));
+const REMINDER_OPTIONS = [60, 30, 14, 7, 0].map((d) => ({
+  value: d,
+  label: d === 0 ? 'On expiry day' : `${d} days before`,
+}));
 const APPEARANCES: { value: AppearancePref; label: string }[] = [
   { value: 'system', label: 'System' },
   { value: 'light', label: 'Light' },
@@ -52,7 +56,10 @@ export default function SettingsScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: theme.background }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.four, paddingBottom: insets.bottom + 120 }]}>
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: insets.top + Spacing.four, paddingBottom: insets.bottom + 120 },
+      ]}>
       <ThemedText style={styles.title} accessibilityRole="header">
         Settings
       </ThemedText>
@@ -81,7 +88,10 @@ export default function SettingsScreen() {
             <Switch
               accessibilityLabel="Push notifications"
               value={settings.push}
-              onValueChange={(push) => settings.update({ push })}
+              onValueChange={(push) => {
+                settings.update({ push });
+                if (push) void registerForPush({ prompt: true });
+              }}
               {...switchColors}
             />
           </Row>
@@ -98,7 +108,11 @@ export default function SettingsScreen() {
           <ThemedText themeColor="textSecondary" numberOfLines={1} style={styles.value}>
             {formatReminders(settings.defaultReminders)}
           </ThemedText>
-          <SymbolView name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }} size={14} tintColor={theme.textSecondary} />
+          <SymbolView
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            size={14}
+            tintColor={theme.textSecondary}
+          />
         </Row>
       </Section>
 
@@ -134,7 +148,10 @@ export default function SettingsScreen() {
       <Pressable
         accessibilityRole="button"
         onPress={signOut}
-        style={({ pressed }) => [styles.signOut, { backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement }]}>
+        style={({ pressed }) => [
+          styles.signOut,
+          { backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement },
+        ]}>
         <ThemedText style={[styles.signOutLabel, { color: theme.primary }]}>Sign out</ThemedText>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} style={styles.deleteAccount}>
@@ -178,7 +195,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({ label, children, onPress, external }: { label: string; children?: ReactNode; onPress?: () => void; external?: boolean }) {
+function Row({
+  label,
+  children,
+  onPress,
+  external,
+}: {
+  label: string;
+  children?: ReactNode;
+  onPress?: () => void;
+  external?: boolean;
+}) {
   const theme = useTheme();
   const content = (
     <View style={styles.row}>
@@ -186,7 +213,11 @@ function Row({ label, children, onPress, external }: { label: string; children?:
       <View style={styles.rowValue}>
         {children}
         {external && (
-          <SymbolView name={{ ios: 'arrow.up.right', android: 'north_east', web: 'north_east' }} size={14} tintColor={theme.textSecondary} />
+          <SymbolView
+            name={{ ios: 'arrow.up.right', android: 'north_east', web: 'north_east' }}
+            size={14}
+            tintColor={theme.textSecondary}
+          />
         )}
       </View>
     </View>
@@ -203,7 +234,13 @@ function Row({ label, children, onPress, external }: { label: string; children?:
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: Spacing.three, gap: Spacing.four, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
+  content: {
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.four,
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+  },
   title: { fontSize: 34, lineHeight: 41, fontWeight: 700 },
   profile: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderRadius: 16 },
   avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
@@ -214,7 +251,13 @@ const styles = StyleSheet.create({
   sectionTitle: { letterSpacing: 0.5 },
   group: { borderRadius: 16, paddingHorizontal: Spacing.three },
   divider: { height: StyleSheet.hairlineWidth },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three, minHeight: 52 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    minHeight: 52,
+  },
   rowLabel: { flexShrink: 0, fontSize: 17, fontWeight: 400 },
   rowValue: { flexShrink: 1, justifyContent: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   value: { flexShrink: 1 },

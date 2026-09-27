@@ -27,7 +27,7 @@ Jaminly is a free, open-source personal warranty vault. Users sign in with email
 2. Never miss an expiry: timely reminders on mobile push and email.
 3. Show, at a glance, what each warranty covers and doesn't cover.
 4. One account, same data on web and mobile.
-5. Build the UI now against mock data; switch to the real API with a flag.
+5. Built first against mock data, now running on the real API (`apps/warranty-api`).
 6. Open source and easy to self-host: anyone can clone, configure, and run their own instance.
 
 ### Non-goals (v1)
@@ -188,14 +188,12 @@ Key flows:
 
 ## 9. API Integration & Feature Flags
 
-The backend isn't ready. The UI talks to a single data layer that switches between mock and real implementations by flag, using Expo public env vars (`EXPO_PUBLIC_*`, read at build time).
+All data comes from the API through one client (`src/lib/api`). Configuration uses Expo public env vars (`EXPO_PUBLIC_*`, read at build time).
 
 | Flag | Default (now) | Purpose |
 |---|---|---|
-| `EXPO_PUBLIC_USE_MOCK_API` | `true` | **Warranties only**: in-memory mock data until the API's warranty endpoints exist. Sign-in and account calls always use the real API. |
 | `EXPO_PUBLIC_API_BASE_URL` | `http://localhost:3001/api/v1` | The Jaminly API. Use the machine's LAN IP on a physical phone (`.env.local`). |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | _(empty)_ | Google Web client ID. Empty hides "Continue with Google". |
-| `EXPO_PUBLIC_LOCAL_REMINDERS` | `true` | Schedule reminders as on-device local notifications until server-side scheduling exists. |
 
 Expected API surface (for backend team):
 
@@ -252,7 +250,7 @@ POST   /me/push-tokens         # register Expo push token
 |---|---|
 | **M0 — UI on mocks** | Navigation, login (mock auth), warranty CRUD with required proof upload, coverage, list/detail, local reminders. All flags on mock. |
 | **M1 — Real auth** | Email/password with email codes, Google on iOS/Android/Web (`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` set), secure session, account deletion. |
-| **M2 — API** | Switch `USE_MOCK_API=false`; uploads via signed URLs; server-side reminders + push token registration + email. |
+| **M2 — API** ✅ | Mock removed; warranties, uploads via signed URLs, notification settings, server-side reminders (push + email), push token registration. |
 | **M3 — Open-source release** | README, CONTRIBUTING, `.env.example`, license, self-hosting guide. |
 | **M4 — Launch** | EAS builds, store listings, privacy policy. |
 | **v2** | OCR receipt scan, household sharing, PDF export, extended warranties, email-forwarded receipts. |

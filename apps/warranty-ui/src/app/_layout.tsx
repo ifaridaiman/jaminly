@@ -9,11 +9,11 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SettingsProvider>
-        <SessionProvider>
+      <SessionProvider>
+        <SettingsProvider>
           <RootNavigator />
-        </SessionProvider>
-      </SettingsProvider>
+        </SettingsProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

@@ -9,7 +9,7 @@ One Expo codebase for iOS, Android and Web (Expo SDK 57, React Native 0.86, Reac
 ## 1. Principles
 
 1. **Screens are thin.** A route file puts components together and calls hooks. Logic lives in `features/`.
-2. **One door to the backend.** Every server call goes through `src/lib/api`. Screens never call `fetch` directly. That makes the mock ↔ real switch a single flag.
+2. **One door to the backend.** Every server call goes through `src/lib/api`. Screens never call `fetch` directly.
 3. **Few dependencies.** Use Expo modules first; add a library only when it saves real work (see §9).
 4. **Platform differences stay in files.** Use the `.web.tsx` / `.native.tsx` suffixes (already used in `components/`), not `Platform.OS` checks scattered through screens.
 5. **Runs on a fresh clone.** With default flags the app runs in Expo Go with no keys and no backend. This matters for open-source contributors.
@@ -55,10 +55,10 @@ src/
   lib/
     env.ts                      # typed reader for EXPO_PUBLIC_* flags
     api/
-      index.ts                  # exports `api`, picks mock or http from env
+      index.ts                  # exports `api`
       types.ts                  # User, Warranty, Attachment, ApiClient
       http.ts                   # real client (fetch + auth header + refresh)
-      mock.ts                   # in-memory + persisted fake backend
+      errors.ts                 # ApiError { code, message, fields }
     storage.ts                  # token storage: SecureStore (native)
     storage.web.ts              # token storage: localStorage (web)
     query-client.ts             # TanStack Query client
@@ -118,33 +118,14 @@ function RootNavigator() {
 
 ## 4. Data Layer
 
-### 4.1 API client (mock ↔ real)
+### 4.1 API client
 
-```ts
-// lib/api/types.ts
-export interface ApiClient {
-  signInWithGoogle(idToken: string): Promise<{ user: User; accessToken: string; refreshToken: string }>;
-  getMe(): Promise<User>;
-  requestAccountDeletion(): Promise<{ email: string; resendAfterSeconds: number }>; // emails a code
-  confirmAccountDeletion(code: string): Promise<void>; // server checks the code, then deletes
-  listWarranties(q?: WarrantyQuery): Promise<Warranty[]>;
-  getWarranty(id: string): Promise<Warranty>;
-  createWarranty(input: WarrantyInput): Promise<Warranty>;
-  updateWarranty(id: string, input: Partial<WarrantyInput>): Promise<Warranty>;
-  deleteWarranty(id: string): Promise<void>;
-  uploadProof(file: LocalFile): Promise<Attachment>;
-  saveNotificationSettings(s: NotificationSettings): Promise<void>;
-  registerPushToken(token: string): Promise<void>;
-}
+`lib/api/types.ts` defines `AuthApi` (sign-in, session, settings, push tokens, account deletion) and `WarrantyApi`; `lib/api/http.ts` implements both against the API. The mock backend was removed at M2.
 
-// lib/api/index.ts
-export const api: ApiClient = env.useMockApi ? mockApi : httpApi;
-```
-
-`ApiClient` is the one interface in the codebase that has two implementations, which is why it exists. Its methods match the endpoints in PRD §9, so the backend team can build against it.
-
-- **mock.ts:** keeps data in memory, saves it to AsyncStorage so it survives reloads, adds ~300 ms of fake latency so loading states get exercised, and comes with a few sample warranties. `uploadProof` just returns the local file URI.
-- **http.ts:** a thin `fetch` wrapper that adds the `Authorization` header, retries once after a token refresh on a 401, and turns error responses into an `ApiError { status, message }`. Uploads use `POST /uploads` to get a signed URL, then `PUT` the file to it.
+- **Envelope:** every response is `{ success, code, message, data, errors }`; the client returns `data` or throws `ApiError { code, message, fields }` (`fields` = per-field messages keyed by path, e.g. `proofOfPurchase[0].id`). The warranty form maps paths to its sections.
+- **Auth:** access token in memory, refresh token in `lib/storage` (§5). A 401 refreshes once and replays.
+- **Uploads on save:** `createWarranty` / `updateWarranty` upload every attachment whose `url` is a device URI (`file:`, `blob:`, `content:`, `ph:`): `POST /uploads` → `PUT` the bytes to the presigned URL with the returned headers → send `{ id }`. Already-uploaded attachments (signed `https:` URLs) pass through as `{ id }`. The size sent is the blob's real size, which the presigned URL enforces.
+- **Edits:** `PATCH` treats a missing field as "unchanged", so on edit cleared text fields go as `""` and a cleared price as `null`.
 
 ### 4.2 Server state: TanStack Query
 
@@ -230,23 +211,22 @@ Email/password is the main path; Google is an alternative on the same account (A
 
 ## 7. Reminders
 
-**Until the backend exists** (`EXPO_PUBLIC_LOCAL_REMINDERS=true`):
-- `features/reminders/schedule.ts` uses `expo-notifications` DATE triggers, one per offset (default 30/7/0 days) at 09:00 local time.
-- The notification identifier is `${warrantyId}:${offset}`, so an edit cancels and re-creates that warranty's set.
-- Local notifications work in Expo Go. **Push** needs a development build on Android.
-- Web: `expo-notifications` doesn't support web, so `schedule.web.ts` is a no-op and web relies on the in-app "Expiring soon" list.
+The server plans and sends reminders (API ARCHITECTURE §7): 09:00 in the user's timezone, push and/or email. The app's part:
 
-**With the backend** (flag off): the server schedules the reminders; the app only registers its Expo push token (`api.registerPushToken`) and handles taps (deep link to the detail screen).
-
-Ask for notification permission **after the first warranty is saved**, not at launch, so the user sees why it's needed.
+- **Timezone:** `SettingsProvider` sends the device timezone with notification settings on sign-in and on every change.
+- **Push token** (`features/notifications/push.ts`, `expo-notifications`): on a real device with an EAS project id, gets the Expo push token and `POST /me/push-tokens`. Android creates a `reminders` channel first (needed for the permission prompt on Android 13+).
+  - The permission prompt appears **after the first warranty is saved** (or when Push is switched on in Settings), not at launch.
+  - On app start the token is refreshed only if permission was already granted.
+  - Sign-out removes the token from the server first, so the next person on the device doesn't get the previous user's reminders.
+- **Taps:** `useNotificationTaps()` opens `data.url` (`jaminly://warranty/<id>`) as `/warranty/<id>`, including the tap that launched the app.
+- **Web:** `push.web.ts` is a no-op; web users get email reminders and the in-app "Expiring soon" list.
+- Needs a development build (push isn't in Expo Go on Android) and `eas init` for the project id. Without them registration silently does nothing.
 
 ## 8. Configuration & Flags
 
 ```ts
 // lib/env.ts
 export const env = {
-  useMockApi: process.env.EXPO_PUBLIC_USE_MOCK_API !== 'false', // warranties only
-  localReminders: process.env.EXPO_PUBLIC_LOCAL_REMINDERS !== 'false',
   apiBaseUrl: (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, ''),
   googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
 };
@@ -266,7 +246,6 @@ To add (always with `npx expo install`):
 | Package | For | When |
 |---|---|---|
 | `@tanstack/react-query` | server state | M0 |
-| `@react-native-async-storage/async-storage` | mock backend persistence | M0 |
 | `expo-image-picker`, `expo-document-picker`, `expo-image-manipulator` | proof of purchase | M0 |
 | `expo-notifications` | reminders | M0 |
 | `expo-secure-store` | tokens (native) | M1 |
@@ -309,5 +288,5 @@ Deliberately **not** added: a UI kit, NativeWind/Tamagui, Redux/Zustand, a date 
 |---|---|
 | M0 — UI on mocks | Folder structure, `env.ts`, `api/mock.ts`, TanStack Query, auth gate with mock auth, warranty CRUD, local reminders, unit tests |
 | M1 — Real auth | `http.ts` auth calls + token refresh, `storage.ts`, google-sign-in native + web, dev build |
-| M2 — API | `api/http.ts`, signed uploads, push token registration, turn off local reminders |
+| M2 — API ✅ | Warranty calls in `http.ts` with uploads on save, server field errors in the form, settings sync with timezone, push registration + tap handling; mock removed |
 | M3 — OSS release | `.env.example`, CI workflow, CONTRIBUTING |

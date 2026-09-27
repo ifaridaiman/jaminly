@@ -1,6 +1,9 @@
 import { Stack } from 'expo-router';
+import { useEffect } from 'react';
 import type { ComponentProps } from 'react';
 
+import { registerForPush, useNotificationTaps } from '@/features/notifications/push';
+import { useSettings } from '@/features/settings/settings-provider';
 import { useTheme } from '@/hooks/use-theme';
 
 // Pop-up sheets: iOS page sheet, Android full-screen modal, web dialog (desktop) or bottom sheet (phone).
@@ -13,6 +16,14 @@ const popup: ComponentProps<typeof Stack.Screen>['options'] = {
 
 export default function AppLayout() {
   const theme = useTheme();
+  const { push } = useSettings();
+  useNotificationTaps();
+  // Signed in: refresh this device's push token if permission was already given. The prompt itself
+  // waits until the first warranty is saved, when the reason for it is obvious.
+  useEffect(() => {
+    if (push) void registerForPush({ prompt: false });
+  }, [push]);
+
   return (
     <Stack
       screenOptions={{

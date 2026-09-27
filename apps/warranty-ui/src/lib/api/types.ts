@@ -31,7 +31,10 @@ export type AuthSession = { user: User; accessToken: string; refreshToken: strin
 /** An emailed code went out (or would have, for an email we won't confirm exists). */
 export type CodeSent = { email: string; resendAfterSeconds: number };
 
-/** Sign-in and account calls. Always the real API (http.ts). */
+/** Server-side notification settings. Appearance is device-local and not here. */
+export type NotificationSettings = { push: boolean; email: boolean; defaultReminders: number[]; timezone: string };
+
+/** Sign-in and account calls. */
 export interface AuthApi {
   /** Creates an unverified account and emails a code. Sign-in happens in `verifyEmail`. */
   register(input: { name: string; email: string; password: string }): Promise<CodeSent>;
@@ -45,13 +48,19 @@ export interface AuthApi {
   /** Signs back in with the stored refresh token (app start). null = signed out. */
   restoreSession(): Promise<AuthSession | null>;
   logout(): Promise<void>;
+  getNotificationSettings(): Promise<NotificationSettings>;
+  /** Replaces all four values. A new timezone reschedules reminders on the server. */
+  saveNotificationSettings(settings: NotificationSettings): Promise<NotificationSettings>;
+  /** Registers this device for reminder pushes. Idempotent. */
+  registerPushToken(token: string, platform: 'ios' | 'android'): Promise<void>;
+  removePushToken(token: string): Promise<void>;
   /** Emails a one-time code to the signed-in user. The code never reaches the app. */
   requestAccountDeletion(): Promise<CodeSent>;
   /** Deletes the account and all its data if `code` matches the emailed one. */
   confirmAccountDeletion(code: string): Promise<void>;
 }
 
-/** Warranty calls. Mock (mock.ts) until the API's warranty endpoints land (M2). */
+/** Warranty calls. New local files in proofOfPurchase are uploaded before saving. */
 export interface WarrantyApi {
   listWarranties(): Promise<Warranty[]>;
   getWarranty(id: string): Promise<Warranty>;

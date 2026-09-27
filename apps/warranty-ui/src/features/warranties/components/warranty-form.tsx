@@ -68,10 +68,12 @@ type Props = {
   initial: WarrantyInput;
   saving: boolean;
   saveError?: string;
+  /** Per-field errors from the API, keyed by path (e.g. "proofOfPurchase[0].id"). */
+  serverErrors?: Record<string, string>;
   onSubmit: (input: WarrantyInput) => void;
 };
 
-export function WarrantyForm({ title, initial, saving, saveError, onSubmit }: Props) {
+export function WarrantyForm({ title, initial, saving, saveError, serverErrors, onSubmit }: Props) {
   const theme = useTheme();
   const [productName, setProductName] = useState(initial.productName);
   const [brand, setBrand] = useState(initial.brand ?? '');
@@ -92,7 +94,9 @@ export function WarrantyForm({ title, initial, saving, saveError, onSubmit }: Pr
   const [notes, setNotes] = useState(initial.coverage.notes ?? '');
   const [reminders, setReminders] = useState(initial.reminderOffsetsDays);
   const [proof, setProof] = useState(initial.proofOfPurchase);
-  const [errors, setErrors] = useState<WarrantyErrors & { price?: string }>({});
+  const [clientErrors, setErrors] = useState<WarrantyErrors & { price?: string }>({});
+  // Local checks win; server errors fill in what only the server knows (e.g. a file that failed to upload).
+  const errors: Record<string, string | undefined> = { ...rootFields(serverErrors), ...clientErrors };
   const [sheet, setSheet] = useState<'category' | 'length' | null>(null);
 
   const currency = initial.price?.currency ?? DEFAULT_CURRENCY;
@@ -254,7 +258,7 @@ export function WarrantyForm({ title, initial, saving, saveError, onSubmit }: Pr
               ? 'Set manually. Tap Reset to work it out again.'
               : 'Worked out from the purchase date and length.'}
           </ThemedText>
-          <FieldError message={errors.warrantyMonths} />
+          <FieldError message={errors.warrantyMonths ?? errors.expiryDate} />
         </Section>
 
         <Section
@@ -550,6 +554,13 @@ function ChipEditor({
       </View>
     </View>
   );
+}
+
+/** "proofOfPurchase[0].id" → "proofOfPurchase", so each error lands under its section's input. */
+function rootFields(fields: Record<string, string> = {}) {
+  const out: Record<string, string> = {};
+  for (const [path, message] of Object.entries(fields)) out[path.split(/[.[]/)[0]] ??= message;
+  return out;
 }
 
 function FieldError({ message }: { message?: string }) {
