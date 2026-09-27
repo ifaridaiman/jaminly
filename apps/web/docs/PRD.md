@@ -1,0 +1,200 @@
+# PRD — Jaminly Website
+
+| | |
+|---|---|
+| **Status** | Draft v0.1 (planning, not built yet) |
+| **Owner** | Farid Aiman |
+| **Last updated** | 2026-09-27 |
+| **App** | `apps/web` (package `jaminly-web`) |
+| **Stack** | Astro 7, static output |
+| **Related** | [DESIGN](./DESIGN.md) · [App PRD](../../warranty-ui/docs/PRD.md) · [App DESIGN](../../warranty-ui/docs/DESIGN.md) |
+
+---
+
+## 1. Summary
+
+The public website for Jaminly. It has two jobs:
+
+1. **Promote the app.** Explain what Jaminly does, rank in search for warranty- and receipt-tracking queries, and send visitors to the app stores, the web app, or GitHub.
+2. **Host the legal pages the app and stores need.** A privacy policy, terms of use and an account-deletion page, each at a stable public URL. The app's Settings screen links here (`PRIVACY_URL` in `warranty-ui/src/constants/links.ts`), and so do the App Store and Google Play listings.
+
+The site is built with Astro because it outputs static HTML with no JavaScript by default. That gives fast pages, good Core Web Vitals and fully crawlable content, all of which help SEO.
+
+## 2. Goals & Non-goals
+
+### Goals
+1. **Get found.** Rank for "warranty tracker app", "receipt organizer app", "warranty reminder" and Malay equivalents ("jejak waranti", "simpan resit"). Every page is indexable, has unique metadata and structured data.
+2. **Convert.** A visitor understands what Jaminly does from the hero alone and can reach a download or the web app in one click.
+3. **Meet store requirements.** Public URLs for the privacy policy (Apple and Google), account deletion (Google Play) and terms.
+4. **Be honest about data.** The privacy policy matches what the app actually collects (App PRD §7 and §10), in plain language.
+5. **Fast and accessible.** Lighthouse ≥ 95 in every category, WCAG AA, works without JavaScript.
+6. **Look like Jaminly.** Same brand, colours and logo as the app, designed with the `design-taste-frontend` skill (see [DESIGN](./DESIGN.md)).
+
+### Non-goals (v1)
+- Accounts, sign-in or any app functionality on the website. That lives in the web app.
+- A CMS. Content is Markdown/MDX in the repo, edited by pull request.
+- Third-party analytics, ad pixels or cookie banners. The site sets no cookies (see §8).
+- A blog. The structure leaves room for one (a content collection) in v2.
+- Paid ads landing pages or A/B testing.
+
+## 3. Audience
+
+| Visitor | Arrives from | Wants to know |
+|---|---|---|
+| **Searcher** | Google: "how to keep track of warranties", "receipt app" | Does this solve my problem? Is it free? |
+| **Store browser** | App Store / Play listing → "Website" link | Is this legit? Who makes it? |
+| **Privacy checker** | Store listing, in-app Settings | What data is collected and how do I delete it? |
+| **Developer** | GitHub, Hacker News, Reddit | Is it really open source? Can I self-host? |
+
+## 4. Information Architecture
+
+```
+/                   Home (landing page)
+/privacy            Privacy policy
+/terms              Terms of use
+/delete-account     How to delete your account and data
+/404                Not found
+/sitemap-index.xml  generated
+/robots.txt
+```
+
+- Header nav: **Features** (anchor), **Privacy** (anchor to the privacy section), **FAQ** (anchor), **GitHub** (external), plus one primary CTA.
+- Footer: Privacy policy, Terms, Delete account, GitHub, License, contact email, © year.
+- URLs are lowercase, no trailing slash, no file extensions. Once published, slugs never change: the app and store listings link to them.
+
+## 5. Page Requirements
+
+### 5.1 Home (`/`)
+Section order and content. The layout of each section is in [DESIGN §5](./DESIGN.md#5-page-layouts).
+
+| ID | Section | Content | Priority |
+|---|---|---|---|
+| HOME-1 | Hero | Headline, one-line subtext (≤ 20 words), primary CTA (get the app), secondary CTA (GitHub), a real app screenshot | P0 |
+| HOME-2 | Problem | The three pains from App PRD §2: fading receipts, forgotten expiry dates, not knowing what's covered | P0 |
+| HOME-3 | Features | Receipt vault, expiry reminders (push + email), coverage at a glance, same data on phone and web, open source | P0 |
+| HOME-4 | How it works | Snap the receipt → set the warranty length → get reminded before it expires | P0 |
+| HOME-5 | Privacy promise | Four plain pledges (no ads, no selling data, private receipts, delete everything anytime) + link to `/privacy` | P0 |
+| HOME-6 | Open source | MIT license, self-hostable, link to the repo and self-hosting guide | P1 |
+| HOME-7 | FAQ | 5–7 real questions (Is it free? Which platforms? Where are my receipts stored? What if I lose my phone? Can I self-host? How do I delete my data?) | P0 |
+| HOME-8 | Closing CTA | Same primary CTA as the hero | P1 |
+
+Primary CTA behaviour:
+- **Before store launch:** "Open web app" (links to the hosted web app) or, if there is no hosted instance, "View on GitHub" becomes the only CTA.
+- **After store launch:** official App Store and Google Play badges, with the web app as a text link. The page detects nothing: all options are always shown, no user-agent sniffing.
+
+### 5.2 Privacy policy (`/privacy`)
+
+| ID | Requirement | Priority |
+|---|---|---|
+| LEGAL-1 | Written in Markdown (`src/content/legal/privacy.md`) with a visible "Last updated" date and a version history note at the bottom. | P0 |
+| LEGAL-2 | Plain language first: a short "In short" summary at the top, then the detailed sections. | P0 |
+| LEGAL-3 | Linkable headings (`/privacy#data-we-collect`) and an in-page table of contents. | P0 |
+| LEGAL-4 | Covers every item in §7 below. | P0 |
+| LEGAL-5 | Reviewed by a person with legal knowledge before the app launches in stores. | P0 (launch gate) |
+
+### 5.3 Terms (`/terms`)
+Short, plain terms: the service is provided as-is and free; the user owns their content; acceptable use; no warranty (with a note on the irony); link to the open-source license; governing law (Malaysia, TBC); contact. Same Markdown and "Last updated" handling as the privacy policy.
+
+### 5.4 Delete account (`/delete-account`)
+Google Play requires a public web page explaining account deletion.
+- Step-by-step in-app instructions (Settings → Delete account → type "delete" → enter the emailed code), matching App PRD AUTH-5.
+- What is deleted (account, all warranties, all receipt files, push tokens) and when (immediately; backups purged within N days, TBC).
+- Fallback: email request from the account's address, for users who no longer have the app.
+
+### 5.5 404
+Friendly message, link home, same header and footer.
+
+## 6. SEO Requirements
+
+| ID | Requirement | Priority |
+|---|---|---|
+| SEO-1 | Unique `<title>` (≤ 60 chars) and meta description (≤ 155 chars) per page. | P0 |
+| SEO-2 | Canonical URL on every page, from `site` in `astro.config.mjs`. | P0 |
+| SEO-3 | Open Graph + Twitter card tags, with a 1200×630 OG image per page (a default one plus a variant for legal pages). | P0 |
+| SEO-4 | JSON-LD: `SoftwareApplication` (name, OS: iOS/Android/Web, category: Utilities / Productivity, `offers.price: 0`) and `Organization` on Home; `FAQPage` for the FAQ; `WebPage` on legal pages. | P0 |
+| SEO-5 | `@astrojs/sitemap` generates the sitemap; `robots.txt` allows all and points to it. | P0 |
+| SEO-6 | Exactly one `<h1>` per page, logical heading order, descriptive link text, `alt` on every image. | P0 |
+| SEO-7 | `lang="en"` on `<html>`. If Bahasa Melayu is added, use `/ms/` routes with `hreflang` alternates (Astro i18n). | P1 |
+| SEO-8 | Smart App Banner meta (`apple-itunes-app`) once the App Store ID exists. | P2 |
+| SEO-9 | Keyword targets live in the copy naturally: headline and first paragraph mention "warranty" and "receipt". No keyword stuffing, no hidden text. | P0 |
+| SEO-10 | Submit the sitemap to Google Search Console and Bing Webmaster Tools after launch. | P1 |
+
+## 7. Privacy Policy Content (source of truth)
+
+The policy must match what the app does. This list comes from App PRD §6, §7 and §10 and must be re-checked whenever the data model changes.
+
+| Topic | What the policy says |
+|---|---|
+| **Who we are** | Jaminly, an open-source project by Farid Aiman. Contact email (TBC). |
+| **Scope** | Covers the official hosted Jaminly service and this website. Self-hosted instances are run by whoever hosts them; this policy doesn't apply to them. |
+| **Account data** | From Google Sign-In: name, email address, profile photo URL. Google ID token is verified and discarded. |
+| **Warranty data** | What the user enters: product name, brand, model, serial number, category, store, purchase date, price, warranty length, coverage notes, reminder settings. |
+| **Receipts** | Photos and PDFs of proof of purchase. They can contain addresses and partial card numbers, so they are stored in private storage, encrypted at rest, and served only through short-lived signed links. |
+| **Device data** | Expo push token (for reminders) and notification preferences. On the device, the session token sits in secure storage (native) or `localStorage` (web). |
+| **Email** | Used for reminders the user turns on, and for the one-time account-deletion code. No marketing email. |
+| **What we don't do** | No ads, no selling or sharing data for advertising, no tracking across apps or sites, no analytics unless it is opt-in (App PRD open question 6). |
+| **Processors** | Google (sign-in), Expo (push delivery), the email provider (TBC), the hosting and storage provider (TBC). |
+| **Retention & deletion** | Data kept while the account exists. In-app deletion removes the account, warranties, receipts and push tokens; backups purged within N days (TBC). |
+| **Your rights** | Access, correction, deletion, portability. PDPA 2010 (Malaysia) and GDPR where applicable. How to contact us to exercise them. |
+| **Children** | Not directed at children under 13 (or the local minimum age). |
+| **Security** | HTTPS only, encryption at rest, private buckets, least-privilege access. |
+| **Changes** | Material changes are announced in the app and on this page, with the "Last updated" date. |
+| **Website** | This website sets no cookies and loads no third-party trackers. Standard server logs (IP, user agent) kept by the host for N days for security. |
+
+## 8. Non-functional Requirements
+
+- **Performance:** static HTML, zero client JavaScript by default. LCP < 2.0 s on a mid-range phone over 4G, CLS < 0.05, total page weight on Home < 500 KB (excluding the lazy-loaded screenshots below the fold).
+- **Images:** Astro `<Image>`/`<Picture>` with AVIF and WebP, explicit width/height, `loading="lazy"` below the fold, hero screenshot preloaded.
+- **Fonts:** one self-hosted variable font (see DESIGN §3.2), `font-display: swap`, preloaded, subset to Latin.
+- **Accessibility:** WCAG 2.2 AA, keyboard navigable, visible focus ring, `prefers-reduced-motion` and `prefers-color-scheme` respected, works with JavaScript disabled.
+- **Privacy:** no cookies, no third-party requests at runtime (fonts and images are self-hosted).
+- **Browser support:** last 2 versions of evergreen browsers, iOS Safari 16+.
+
+## 9. Technical Plan
+
+| Area | Choice |
+|---|---|
+| Framework | Astro 7 (`output: 'static'`), already scaffolded in `apps/web` from the official `minimal` template |
+| Styling | Tailwind CSS v4 via `@tailwindcss/vite`, tokens as CSS variables (DESIGN §3) |
+| Content | Astro content collections: `src/content/legal/*.md` |
+| Integrations | `@astrojs/sitemap`, `@astrojs/mdx` (if FAQ or legal pages need components) |
+| Icons | Phosphor via `astro-icon` + `@iconify-json/ph` (rendered to inline SVG at build time, no runtime JS) |
+| Fonts | `@fontsource-variable/plus-jakarta-sans` |
+| Screenshots | Captured from `warranty-ui` running on web with mock data (Playwright), exported to `src/assets/screens/` |
+| Checks | `astro check` (types), `astro build`, Lighthouse CI on the built output |
+| Hosting | Static host (TBC: Cloudflare Pages, Vercel, Netlify or GitHub Pages) |
+
+Workspace scripts:
+```bash
+pnpm --filter jaminly-web dev       # http://localhost:4321
+pnpm --filter jaminly-web build     # → apps/web/dist
+pnpm --filter jaminly-web preview
+```
+
+## 10. Changes Outside `apps/web`
+
+- `warranty-ui/src/constants/links.ts`: point `PRIVACY_URL` at `https://<domain>/privacy`, add `TERMS_URL` and `DELETE_ACCOUNT_URL`. It currently points at a `PRIVACY.md` on GitHub that doesn't exist.
+- Root `README.md`: add `apps/web` to the monorepo layout and scripts.
+- Store listings (M4 in App PRD): use the site's privacy and delete-account URLs.
+
+## 11. Open Questions
+
+1. **Domain.** e.g. `jaminly.app` or `jaminly.my`. Needed for `site`, canonical URLs and the sitemap. Placeholder until decided: `https://jaminly.app`.
+2. **Hosting provider** for the static site.
+3. **Official hosted instance?** (App PRD open question 5.) Changes the privacy policy scope and the primary CTA.
+4. **Contact email** for privacy and support requests.
+5. **Email provider** for reminders (App PRD open question 4), to name as a processor.
+6. **Bahasa Melayu version** in v1, or later?
+7. **Backup retention period** for deleted accounts.
+8. **Lifestyle photography:** will you provide or generate photos (receipt on a kitchen counter, a broken appliance, etc.)? See DESIGN §6.
+
+## 12. Milestones
+
+| Phase | Scope |
+|---|---|
+| **W0 — Scaffold** ✅ | Fresh Astro in `apps/web`, builds in the workspace. |
+| **W1 — Foundation** | Tailwind v4, tokens, font, base layout, SEO component, header, footer, 404. |
+| **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7. Update `links.ts` in the app. (Can ship before the landing page: stores only need these URLs.) |
+| **W3 — Landing page** | All Home sections, real app screenshots, FAQ with JSON-LD. |
+| **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy, Search Console. |
+| **v2** | Bahasa Melayu, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |

@@ -111,7 +111,7 @@ Priority: **P0** = MVP must-have, **P1** = should-have for launch, **P2** = late
 - Notification preferences (§6.3).
 - About: app version, link to the GitHub repo, license.
 - Sign out, Delete account.
-- Privacy policy & Terms links.
+- Privacy policy & Terms links, pointing at the website's `/privacy` and `/terms` pages ([Website PRD](../../web/docs/PRD.md)).
 
 ## 7. Data Model (draft)
 
@@ -242,5 +242,5 @@ POST   /me/push-tokens         # register Expo push token
 | **M1 — Real auth** | Google SSO on iOS/Android/Web (`MOCK_AUTH=false`), secure session, account deletion. |
 | **M2 — API** | Switch `USE_MOCK_API=false`; uploads via signed URLs; server-side reminders + push token registration + email. |
 | **M3 — Open-source release** | README, CONTRIBUTING, `.env.example`, license, self-hosting guide. |
-| **M4 — Launch** | EAS builds, store listings, privacy policy. |
+| **M4 — Launch** | EAS builds, store listings, privacy policy (hosted on the website, `apps/web`). |
 | **v2** | OCR receipt scan, household sharing, PDF export, extended warranties, email-forwarded receipts. |

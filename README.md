@@ -27,12 +27,13 @@ full product spec.
 
 ## Monorepo layout
 
-This is a pnpm workspace with two apps:
+This is a pnpm workspace with three apps:
 
 ```
 apps/
   warranty-ui/   Expo (React Native) app — iOS, Android, Web
   warranty-api/  NestJS backend API
+  web/           Astro marketing site + privacy policy (see apps/web/docs)
 ```
 
 ## Getting started
@@ -55,10 +56,17 @@ Run the API:
 pnpm --filter warranty-api start:dev
 ```
 
+Run the website:
+
+```bash
+pnpm --filter jaminly-web dev
+```
+
 ## Tech stack
 
 - **warranty-ui** — Expo SDK 57, Expo Router, React Native, React Query
 - **warranty-api** — NestJS
+- **web** — Astro 7 (static)
 
 ## License
 
