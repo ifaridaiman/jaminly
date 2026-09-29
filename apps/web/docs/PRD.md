@@ -4,9 +4,12 @@
 |---|---|
 | **Status** | Draft v0.1 (planning, not built yet) |
 | **Owner** | Farid Aiman |
-| **Last updated** | 2026-09-27 |
+| **Last updated** | 2026-09-29 |
 | **App** | `apps/web` (package `jaminly-web`) |
 | **Stack** | Astro 7, static output |
+| **Domain** | `https://jaminly.app` |
+| **Contact** | app@jaminly.app |
+| **Hosting** | Vercel (later). Local development only for now, see §9.1 |
 | **Related** | [DESIGN](./DESIGN.md) · [App PRD](../../warranty-ui/docs/PRD.md) · [App DESIGN](../../warranty-ui/docs/DESIGN.md) |
 
 ---
@@ -59,7 +62,7 @@ The site is built with Astro because it outputs static HTML with no JavaScript b
 ```
 
 - Header nav: **Features** (anchor), **Privacy** (anchor to the privacy section), **FAQ** (anchor), **GitHub** (external), plus one primary CTA.
-- Footer: Privacy policy, Terms, Delete account, GitHub, License, contact email, © year.
+- Footer: Privacy policy, Terms, Delete account, GitHub, License, contact email (app@jaminly.app), © year.
 - URLs are lowercase, no trailing slash, no file extensions. Once published, slugs never change: the app and store listings link to them.
 
 ## 5. Page Requirements
@@ -93,13 +96,13 @@ Primary CTA behaviour:
 | LEGAL-5 | Reviewed by a person with legal knowledge before the app launches in stores. | P0 (launch gate) |
 
 ### 5.3 Terms (`/terms`)
-Short, plain terms: the service is provided as-is and free; the user owns their content; acceptable use; no warranty (with a note on the irony); link to the open-source license; governing law (Malaysia, TBC); contact. Same Markdown and "Last updated" handling as the privacy policy.
+Short, plain terms: the service is provided as-is and free; the user owns their content; acceptable use; no warranty (with a note on the irony); link to the open-source license; governing law (Malaysia, TBC); contact app@jaminly.app. Same Markdown and "Last updated" handling as the privacy policy.
 
 ### 5.4 Delete account (`/delete-account`)
 Google Play requires a public web page explaining account deletion.
 - Step-by-step in-app instructions (Settings → Delete account → type "delete" → enter the emailed code), matching App PRD AUTH-5.
 - What is deleted (account, all warranties, all receipt files, push tokens) and when (immediately; backups purged within N days, TBC).
-- Fallback: email request from the account's address, for users who no longer have the app.
+- Fallback: email app@jaminly.app from the account's address, for users who no longer have the app.
 
 ### 5.5 404
 Friendly message, link home, same header and footer.
@@ -125,7 +128,7 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 
 | Topic | What the policy says |
 |---|---|
-| **Who we are** | Jaminly, an open-source project by Farid Aiman. Contact email (TBC). |
+| **Who we are** | Jaminly, an open-source project by Farid Aiman. Contact: app@jaminly.app. |
 | **Scope** | Covers the official hosted Jaminly service and this website. Self-hosted instances are run by whoever hosts them; this policy doesn't apply to them. |
 | **Account data** | From Google Sign-In: name, email address, profile photo URL. Google ID token is verified and discarded. |
 | **Warranty data** | What the user enters: product name, brand, model, serial number, category, store, purchase date, price, warranty length, coverage notes, reminder settings. |
@@ -135,11 +138,11 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 | **What we don't do** | No ads, no selling or sharing data for advertising, no tracking across apps or sites, no analytics unless it is opt-in (App PRD open question 6). |
 | **Processors** | Google (sign-in), Expo (push delivery), the email provider (TBC), the hosting and storage provider (TBC). |
 | **Retention & deletion** | Data kept while the account exists. In-app deletion removes the account, warranties, receipts and push tokens; backups purged within N days (TBC). |
-| **Your rights** | Access, correction, deletion, portability. PDPA 2010 (Malaysia) and GDPR where applicable. How to contact us to exercise them. |
+| **Your rights** | Access, correction, deletion, portability. PDPA 2010 (Malaysia) and GDPR where applicable. Requests go to app@jaminly.app. |
 | **Children** | Not directed at children under 13 (or the local minimum age). |
 | **Security** | HTTPS only, encryption at rest, private buckets, least-privilege access. |
 | **Changes** | Material changes are announced in the app and on this page, with the "Last updated" date. |
-| **Website** | This website sets no cookies and loads no third-party trackers. Standard server logs (IP, user agent) kept by the host for N days for security. |
+| **Website** | This website sets no cookies and loads no third-party trackers. It is hosted on Vercel, which keeps standard request logs (IP, user agent) for a limited period for security and operations. Vercel Analytics and Speed Insights are not enabled. |
 
 ## 8. Non-functional Requirements
 
@@ -162,7 +165,7 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 | Fonts | `@fontsource-variable/plus-jakarta-sans` |
 | Screenshots | Captured from `warranty-ui` running on web with mock data (Playwright), exported to `src/assets/screens/` |
 | Checks | `astro check` (types), `astro build`, Lighthouse CI on the built output |
-| Hosting | Static host (TBC: Cloudflare Pages, Vercel, Netlify or GitHub Pages) |
+| Hosting | Vercel, static output (no adapter needed). Not set up yet: local only for now (§9.1) |
 
 Workspace scripts:
 ```bash
@@ -171,22 +174,30 @@ pnpm --filter jaminly-web build     # → apps/web/dist
 pnpm --filter jaminly-web preview
 ```
 
+### 9.1 Local first, Vercel later
+
+For now the site is built and previewed locally only. Nothing is deployed and nothing points at `jaminly.app` yet.
+
+- `site: 'https://jaminly.app'` is set in `astro.config.mjs` from the start, so canonical URLs, OG tags and the sitemap are already correct when it goes live.
+- `warranty-ui/src/constants/links.ts` keeps its current value until the site is deployed; switching it earlier would link the app to a page that doesn't exist yet (§10).
+- When it's time to deploy: import the repo in Vercel with **Root Directory** `apps/web`, framework preset **Astro**, build command `pnpm build`, output `dist`. Astro's static output needs no `@astrojs/vercel` adapter. Then add the `jaminly.app` domain (plus `www` redirecting to the apex) and turn on HTTPS.
+- Don't enable Vercel Analytics or Speed Insights: the privacy policy promises no trackers (§7).
+
 ## 10. Changes Outside `apps/web`
 
-- `warranty-ui/src/constants/links.ts`: point `PRIVACY_URL` at `https://<domain>/privacy`, add `TERMS_URL` and `DELETE_ACCOUNT_URL`. It currently points at a `PRIVACY.md` on GitHub that doesn't exist.
+- `warranty-ui/src/constants/links.ts` (at deploy time, not before): point `PRIVACY_URL` at `https://jaminly.app/privacy`, add `TERMS_URL` and `DELETE_ACCOUNT_URL`. It currently points at a `PRIVACY.md` on GitHub that doesn't exist.
 - Root `README.md`: add `apps/web` to the monorepo layout and scripts.
 - Store listings (M4 in App PRD): use the site's privacy and delete-account URLs.
 
 ## 11. Open Questions
 
-1. **Domain.** e.g. `jaminly.app` or `jaminly.my`. Needed for `site`, canonical URLs and the sitemap. Placeholder until decided: `https://jaminly.app`.
-2. **Hosting provider** for the static site.
-3. **Official hosted instance?** (App PRD open question 5.) Changes the privacy policy scope and the primary CTA.
-4. **Contact email** for privacy and support requests.
-5. **Email provider** for reminders (App PRD open question 4), to name as a processor.
-6. **Bahasa Melayu version** in v1, or later?
-7. **Backup retention period** for deleted accounts.
-8. **Lifestyle photography:** will you provide or generate photos (receipt on a kitchen counter, a broken appliance, etc.)? See DESIGN §6.
+Decided (2026-09-29): domain `jaminly.app`, contact app@jaminly.app, hosting on Vercel, local-only until launch.
+
+1. **Official hosted instance?** (App PRD open question 5.) Changes the privacy policy scope and the primary CTA.
+2. **Email provider** for reminders (App PRD open question 4), to name as a processor.
+3. **Bahasa Melayu version** in v1, or later?
+4. **Backup retention period** for deleted accounts.
+5. **Lifestyle photography:** will you provide or generate photos (receipt on a kitchen counter, a broken appliance, etc.)? See DESIGN §6.
 
 ## 12. Milestones
 
@@ -196,5 +207,5 @@ pnpm --filter jaminly-web preview
 | **W1 — Foundation** | Tailwind v4, tokens, font, base layout, SEO component, header, footer, 404. |
 | **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7. Update `links.ts` in the app. (Can ship before the landing page: stores only need these URLs.) |
 | **W3 — Landing page** | All Home sections, real app screenshots, FAQ with JSON-LD. |
-| **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy, Search Console. |
+| **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy to Vercel on `jaminly.app` (§9.1), switch the app's `links.ts`, Search Console. |
 | **v2** | Bahasa Melayu, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |
