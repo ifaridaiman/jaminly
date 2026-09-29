@@ -4,6 +4,7 @@ The Jaminly website: landing page and legal pages (privacy, terms, account delet
 
 - Plan: [`docs/PRD.md`](docs/PRD.md)
 - Design: [`docs/DESIGN.md`](docs/DESIGN.md) (follows the `design-taste-frontend` skill in `.claude/skills/`)
+- Going live: [`docs/LAUNCH.md`](docs/LAUNCH.md)
 
 ## Commands
 
@@ -15,6 +16,7 @@ pnpm --filter jaminly-web check     # type-check .astro and .ts files
 pnpm --filter jaminly-web build     # static output in apps/web/dist
 pnpm --filter jaminly-web preview   # serve the built site
 pnpm --filter jaminly-web screens   # re-capture app screenshots from warranty-ui (Playwright)
+pnpm --filter jaminly-web preflight # pre-launch checks on dist/ (run after build)
 ```
 
 ## Layout

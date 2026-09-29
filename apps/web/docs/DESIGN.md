@@ -332,6 +332,8 @@ Rules:
 
 Run before W4 sign-off. Items that don't apply to this site (GSAP, Motion library, forms, logo walls, testimonials) are left out on purpose.
 
+`pnpm --filter jaminly-web preflight` checks the mechanical items on the built site: dashes, one `<h1>` per page, titles and descriptions, canonical/hreflang/og:image, links and anchors, eyebrow count, photo placeholders and "to be confirmed" text. The rest need a person. Current status: [LAUNCH.md](./LAUNCH.md).
+
 - [ ] Design read and dials unchanged from §1–2, or updated here with reasons
 - [ ] Zero `—` or `–` in visible copy (grep `dist/` for both)
 - [ ] One theme per page, auto light/dark, both modes checked
