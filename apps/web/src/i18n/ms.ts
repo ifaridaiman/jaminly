@@ -38,6 +38,14 @@ const ms: Dictionary = {
     tagline: 'Simpanan waranti percuma dan sumber terbuka.',
     rights: 'Jaminly. Sumber terbuka di bawah lesen MIT.',
   },
+  legal: {
+    inShort: 'Ringkasnya',
+    lastUpdated: 'Kemas kini terakhir',
+    onThisPage: 'Dalam halaman ini',
+    backToTop: 'Kembali ke atas',
+    translationNotice: 'Ini ialah terjemahan. Jika terdapat perbezaan dengan versi bahasa Inggeris, versi bahasa Inggeris terpakai.',
+    readEnglish: 'Baca versi bahasa Inggeris',
+  },
   notFound: {
     title: 'Halaman tidak dijumpai',
     body: 'Halaman ini tidak wujud atau telah dipindahkan.',

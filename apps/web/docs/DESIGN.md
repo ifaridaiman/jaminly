@@ -248,7 +248,7 @@ Photo first (slot `closing`, §6.1, 20 px radius, no text over it), then a short
 - Header and footer as Home. No hero.
 - `<h1>` + "Last updated 27 September 2026" in `small`.
 - "In short" summary box on `--bg-elevated`, 8 px radius.
-- Reading column at 65ch, `body` style, `h2` for sections with anchor links on hover/focus.
+- Reading column at 65ch, `body` style, `h2` for sections. Every heading has an id (`/privacy#data-we-collect`); the table of contents links to them.
 - Sticky table of contents on `lg`, hidden below.
 - Tables allowed (e.g. data we collect → why → how long), with horizontal scroll inside the table only, never the page.
 - `/delete-account` uses a numbered list for the in-app steps: the only place a numbered list appears on the site.
@@ -348,6 +348,8 @@ Run before W4 sign-off. Items that don't apply to this site (GSAP, Motion librar
 - [ ] Mobile: every multi-column section collapses to one column below 768 px, no horizontal scroll
 - [ ] Every check above passes in **both English and Malay** (headline lines, CTA wrap, nav width)
 - [ ] All three photo slots filled; no placeholder left in the build output
+- [ ] No "to be confirmed" / "akan disahkan" left in the legal pages (`grep -ri "confirmed\|disahkan" src/content/legal`)
+- [ ] Legal pages reviewed by someone with legal knowledge (PRD LEGAL-5), Malay versions by a native speaker
 - [ ] `hreflang` pairs and `x-default` present on every page; the switcher lands on the same page
 - [ ] Lighthouse ≥ 95 (Performance, Accessibility, Best Practices, SEO) on `/`, `/ms/`, `/privacy` and `/ms/privacy`
 

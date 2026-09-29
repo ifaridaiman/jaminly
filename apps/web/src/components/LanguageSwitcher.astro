@@ -10,7 +10,9 @@ interface Props {
 
 const { variant = 'compact', class: className } = Astro.props;
 const current = getLocale(Astro.currentLocale);
-const path = neutralPath(Astro.url.pathname);
+// The 404 page has no per-language twin, so switch to that language's home page.
+const neutral = neutralPath(Astro.url.pathname);
+const path = neutral === '/404' ? '/' : neutral;
 const strings = t(current);
 ---
 

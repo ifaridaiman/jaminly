@@ -37,6 +37,14 @@ const en = {
     tagline: 'A free, open-source warranty vault.',
     rights: 'Jaminly. Open source under the MIT license.',
   },
+  legal: {
+    inShort: 'In short',
+    lastUpdated: 'Last updated',
+    onThisPage: 'On this page',
+    backToTop: 'Back to top',
+    translationNotice: 'This is a translation. If it differs from the English version, the English version applies.',
+    readEnglish: 'Read the English version',
+  },
   notFound: {
     title: 'Page not found',
     body: "This page doesn't exist or has moved.",

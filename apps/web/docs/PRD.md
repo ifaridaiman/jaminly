@@ -225,6 +225,9 @@ Still open:
 1. **App backend hosting.** Will Jaminly run an official hosted instance of `warranty-api` for app users, or is the app self-host only? (App PRD open question 5.) This decides whether the privacy policy covers a hosted service and whether the hero CTA says "Get the app" or "View on GitHub".
 2. **Email provider** for reminders (App PRD open question 4), to name as a processor.
 3. **More languages?** English and Malay are confirmed; anything else (e.g. Chinese, Tamil) later?
+4. **Commitments in the W2 legal drafts** to confirm or change: reply to data requests within **21 days** (PDPA's limit for access requests), delete accounts requested by email within **7 days**, and give **30 days'** notice before shutting the service down. Governing law: Malaysia.
+
+The legal pages still say "(Provider to be confirmed)" for the email provider and the hosting/storage provider. Replace those before launch (DESIGN §10).
 
 ## 12. Milestones
 
@@ -232,7 +235,7 @@ Still open:
 |---|---|
 | **W0 — Scaffold** ✅ | Fresh Astro in `apps/web`, builds in the workspace. |
 | **W1 — Foundation** ✅ | Tailwind v4, tokens, font, i18n routing and dictionaries, base layout, SEO component (with `hreflang`), header with language switcher, footer, 404. |
-| **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7, in English and Malay. (Can ship before the landing page: stores only need these URLs.) |
+| **W2 — Legal** ✅ | Privacy, terms and delete-account pages with the content in §7, in English and Malay. (Can ship before the landing page: stores only need these URLs.) |
 | **W3 — Landing page** | All Home sections in both languages, real app screenshots, photo placeholders, FAQ with JSON-LD. |
 | **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy to Vercel on `jaminly.app` (§9.1), switch the app's `links.ts`, Search Console. |
 | **v2** | Swap in supplied photos (can happen any time), more languages, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |
