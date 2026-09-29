@@ -10,6 +10,7 @@
 | **Domain** | `https://jaminly.app` |
 | **Contact** | app@jaminly.app |
 | **Hosting** | Vercel (later). Local development only for now, see §9.1 |
+| **Languages** | English (default) and Bahasa Melayu, see §5.6 |
 | **Related** | [DESIGN](./DESIGN.md) · [App PRD](../../warranty-ui/docs/PRD.md) · [App DESIGN](../../warranty-ui/docs/DESIGN.md) |
 
 ---
@@ -34,6 +35,7 @@ The site is built with Astro because it outputs static HTML with no JavaScript b
 6. **Look like Jaminly.** Same brand, colours and logo as the app, designed with the `design-taste-frontend` skill (see [DESIGN](./DESIGN.md)).
 
 ### Non-goals (v1)
+- Any backend. The site is fully static: no server code, API routes, forms, database or serverless functions. Every page is plain HTML built at compile time.
 - Accounts, sign-in or any app functionality on the website. That lives in the web app.
 - A CMS. Content is Markdown/MDX in the repo, edited by pull request.
 - Third-party analytics, ad pixels or cookie banners. The site sets no cookies (see §8).
@@ -57,13 +59,20 @@ The site is built with Astro because it outputs static HTML with no JavaScript b
 /terms              Terms of use
 /delete-account     How to delete your account and data
 /404                Not found
-/sitemap-index.xml  generated
+
+/ms/                Home (Bahasa Melayu)
+/ms/privacy         Dasar privasi
+/ms/terms           Terma penggunaan
+/ms/delete-account  Padam akaun
+
+/sitemap-index.xml  generated, lists both languages
 /robots.txt
 ```
 
-- Header nav: **Features** (anchor), **Privacy** (anchor to the privacy section), **FAQ** (anchor), **GitHub** (external), plus one primary CTA.
+- Header nav: **Features** (anchor), **Privacy** (anchor to the privacy section), **FAQ** (anchor), **GitHub** (external), a language switcher (EN / BM), plus one primary CTA.
 - Footer: Privacy policy, Terms, Delete account, GitHub, License, contact email (app@jaminly.app), © year.
 - URLs are lowercase, no trailing slash, no file extensions. Once published, slugs never change: the app and store listings link to them.
+- Slugs stay in English in every language (`/ms/privacy`, not `/ms/privasi`), so a page's address differs only by the language prefix.
 
 ## 5. Page Requirements
 
@@ -89,11 +98,12 @@ Primary CTA behaviour:
 
 | ID | Requirement | Priority |
 |---|---|---|
-| LEGAL-1 | Written in Markdown (`src/content/legal/privacy.md`) with a visible "Last updated" date and a version history note at the bottom. | P0 |
+| LEGAL-1 | Written in Markdown, one file per language (`src/content/legal/en/privacy.md`, `src/content/legal/ms/privacy.md`) with a visible "Last updated" date and a version history note at the bottom. | P0 |
 | LEGAL-2 | Plain language first: a short "In short" summary at the top, then the detailed sections. | P0 |
 | LEGAL-3 | Linkable headings (`/privacy#data-we-collect`) and an in-page table of contents. | P0 |
 | LEGAL-4 | Covers every item in §7 below. | P0 |
 | LEGAL-5 | Reviewed by a person with legal knowledge before the app launches in stores. | P0 (launch gate) |
+| LEGAL-6 | Each translated legal page says the English version prevails if the two differ, and links to it. | P0 |
 
 ### 5.3 Terms (`/terms`)
 Short, plain terms: the service is provided as-is and free; the user owns their content; acceptable use; no warranty (with a note on the irony); link to the open-source license; governing law (Malaysia, TBC); contact app@jaminly.app. Same Markdown and "Last updated" handling as the privacy policy.
@@ -101,11 +111,26 @@ Short, plain terms: the service is provided as-is and free; the user owns their 
 ### 5.4 Delete account (`/delete-account`)
 Google Play requires a public web page explaining account deletion.
 - Step-by-step in-app instructions (Settings → Delete account → type "delete" → enter the emailed code), matching App PRD AUTH-5.
-- What is deleted (account, all warranties, all receipt files, push tokens) and when (immediately; backups purged within N days, TBC).
+- What is deleted (account, all warranties, all receipt files, push tokens) and when (immediately; deleted from backups within 14 days, when the backups rotate out).
 - Fallback: email app@jaminly.app from the account's address, for users who no longer have the app.
 
 ### 5.5 404
-Friendly message, link home, same header and footer.
+Friendly message, link home, same header and footer. Shown in the language of the path (`/ms/...` → Malay), English otherwise.
+
+### 5.6 Languages (i18n)
+
+| ID | Requirement | Priority |
+|---|---|---|
+| I18N-1 | Two languages at launch: **English** (`en`, default, served at `/`) and **Bahasa Melayu** (`ms`, served at `/ms/`). Adding a language later means adding a locale folder, not changing code. | P0 |
+| I18N-2 | Astro's built-in i18n routing: `defaultLocale: 'en'`, `locales: ['en', 'ms']`, `prefixDefaultLocale: false`. Every page is pre-rendered once per language; still fully static. | P0 |
+| I18N-3 | UI strings (nav, buttons, section copy, FAQ, metadata) live in one dictionary per language (`src/i18n/en.ts`, `src/i18n/ms.ts`) with the same keys; a missing key fails the type check, never falls back silently. | P0 |
+| I18N-4 | Long-form content (legal pages) lives in a content collection per language (`src/content/legal/{en,ms}/`). | P0 |
+| I18N-5 | Language switcher in the header and footer links to the **same page** in the other language, labelled in its own language ("English", "Bahasa Melayu"). | P0 |
+| I18N-6 | No automatic redirect by browser language or location. Static hosting can't do it cleanly, and redirects hide pages from search engines. The switcher is the only way to change language. | P0 |
+| I18N-7 | `<html lang>` matches the page (`en` / `ms`); `hreflang` alternates for both languages plus `x-default` → English on every page; the sitemap lists the alternates. | P0 |
+| I18N-8 | Titles, descriptions, OG images and JSON-LD text are translated too, not just the visible copy. | P0 |
+| I18N-9 | Malay copy is written or reviewed by a native speaker, not machine-translated only. Malay keywords are researched separately ("jejak waranti", "simpan resit", "peringatan waranti tamat"), not translated one-for-one. | P0 |
+| I18N-10 | Dates are formatted per language with `Intl.DateTimeFormat` ("27 October 2026" in `en-MY`, "27 Oktober 2026" in `ms-MY`). | P1 |
 
 ## 6. SEO Requirements
 
@@ -117,7 +142,7 @@ Friendly message, link home, same header and footer.
 | SEO-4 | JSON-LD: `SoftwareApplication` (name, OS: iOS/Android/Web, category: Utilities / Productivity, `offers.price: 0`) and `Organization` on Home; `FAQPage` for the FAQ; `WebPage` on legal pages. | P0 |
 | SEO-5 | `@astrojs/sitemap` generates the sitemap; `robots.txt` allows all and points to it. | P0 |
 | SEO-6 | Exactly one `<h1>` per page, logical heading order, descriptive link text, `alt` on every image. | P0 |
-| SEO-7 | `lang="en"` on `<html>`. If Bahasa Melayu is added, use `/ms/` routes with `hreflang` alternates (Astro i18n). | P1 |
+| SEO-7 | Per-language `lang`, `hreflang` and `x-default` as in I18N-7; canonical URL points at the page's own language. | P0 |
 | SEO-8 | Smart App Banner meta (`apple-itunes-app`) once the App Store ID exists. | P2 |
 | SEO-9 | Keyword targets live in the copy naturally: headline and first paragraph mention "warranty" and "receipt". No keyword stuffing, no hidden text. | P0 |
 | SEO-10 | Submit the sitemap to Google Search Console and Bing Webmaster Tools after launch. | P1 |
@@ -129,7 +154,7 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 | Topic | What the policy says |
 |---|---|
 | **Who we are** | Jaminly, an open-source project by Farid Aiman. Contact: app@jaminly.app. |
-| **Scope** | Covers the official hosted Jaminly service and this website. Self-hosted instances are run by whoever hosts them; this policy doesn't apply to them. |
+| **Scope** | Covers the official Jaminly apps and this website. Self-hosted instances are run by whoever hosts them; this policy doesn't apply to them. |
 | **Account data** | From Google Sign-In: name, email address, profile photo URL. Google ID token is verified and discarded. |
 | **Warranty data** | What the user enters: product name, brand, model, serial number, category, store, purchase date, price, warranty length, coverage notes, reminder settings. |
 | **Receipts** | Photos and PDFs of proof of purchase. They can contain addresses and partial card numbers, so they are stored in private storage, encrypted at rest, and served only through short-lived signed links. |
@@ -137,18 +162,18 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 | **Email** | Used for reminders the user turns on, and for the one-time account-deletion code. No marketing email. |
 | **What we don't do** | No ads, no selling or sharing data for advertising, no tracking across apps or sites, no analytics unless it is opt-in (App PRD open question 6). |
 | **Processors** | Google (sign-in), Expo (push delivery), the email provider (TBC), the hosting and storage provider (TBC). |
-| **Retention & deletion** | Data kept while the account exists. In-app deletion removes the account, warranties, receipts and push tokens; backups purged within N days (TBC). |
+| **Retention & deletion** | Data kept while the account exists. In-app deletion removes the account, warranties, receipts and push tokens; removed from backups within 14 days. |
 | **Your rights** | Access, correction, deletion, portability. PDPA 2010 (Malaysia) and GDPR where applicable. Requests go to app@jaminly.app. |
 | **Children** | Not directed at children under 13 (or the local minimum age). |
 | **Security** | HTTPS only, encryption at rest, private buckets, least-privilege access. |
 | **Changes** | Material changes are announced in the app and on this page, with the "Last updated" date. |
-| **Website** | This website sets no cookies and loads no third-party trackers. It is hosted on Vercel, which keeps standard request logs (IP, user agent) for a limited period for security and operations. Vercel Analytics and Speed Insights are not enabled. |
+| **Website** | This website is static: it has no backend, collects nothing through forms, sets no cookies and loads no third-party trackers. It is hosted on Vercel, which keeps standard request logs (IP, user agent) for a limited period for security and operations. Vercel Analytics and Speed Insights are not enabled. |
 
 ## 8. Non-functional Requirements
 
 - **Performance:** static HTML, zero client JavaScript by default. LCP < 2.0 s on a mid-range phone over 4G, CLS < 0.05, total page weight on Home < 500 KB (excluding the lazy-loaded screenshots below the fold).
 - **Images:** Astro `<Image>`/`<Picture>` with AVIF and WebP, explicit width/height, `loading="lazy"` below the fold, hero screenshot preloaded.
-- **Fonts:** one self-hosted variable font (see DESIGN §3.2), `font-display: swap`, preloaded, subset to Latin.
+- **Fonts:** one self-hosted variable font (see DESIGN §3.2), `font-display: swap`, preloaded, subset to Latin (covers both English and Malay).
 - **Accessibility:** WCAG 2.2 AA, keyboard navigable, visible focus ring, `prefers-reduced-motion` and `prefers-color-scheme` respected, works with JavaScript disabled.
 - **Privacy:** no cookies, no third-party requests at runtime (fonts and images are self-hosted).
 - **Browser support:** last 2 versions of evergreen browsers, iOS Safari 16+.
@@ -157,10 +182,11 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 
 | Area | Choice |
 |---|---|
-| Framework | Astro 7 (`output: 'static'`), already scaffolded in `apps/web` from the official `minimal` template |
+| Framework | Astro 7 (`output: 'static'`, no adapter, no server routes), already scaffolded in `apps/web` from the official `minimal` template |
 | Styling | Tailwind CSS v4 via `@tailwindcss/vite`, tokens as CSS variables (DESIGN §3) |
-| Content | Astro content collections: `src/content/legal/*.md` |
-| Integrations | `@astrojs/sitemap`, `@astrojs/mdx` (if FAQ or legal pages need components) |
+| Content | Astro content collections: `src/content/legal/{en,ms}/*.md` |
+| i18n | Astro built-in i18n routing + typed string dictionaries in `src/i18n/` (§5.6). No i18n library needed. |
+| Integrations | `@astrojs/sitemap` (with its `i18n` option for alternates), `@astrojs/mdx` (if FAQ or legal pages need components) |
 | Icons | Phosphor via `astro-icon` + `@iconify-json/ph` (rendered to inline SVG at build time, no runtime JS) |
 | Fonts | `@fontsource-variable/plus-jakarta-sans` |
 | Screenshots | Captured from `warranty-ui` running on web with mock data (Playwright), exported to `src/assets/screens/` |
@@ -191,21 +217,22 @@ For now the site is built and previewed locally only. Nothing is deployed and no
 
 ## 11. Open Questions
 
-Decided (2026-09-29): domain `jaminly.app`, contact app@jaminly.app, hosting on Vercel, local-only until launch.
+Decided:
+- 2026-09-29: domain `jaminly.app`, contact app@jaminly.app, hosting on Vercel, local-only until launch.
+- 2026-09-29: the website is fully static with no backend; English and Bahasa Melayu at launch; deleted data is removed from backups within 14 days; lifestyle photos are supplied by the owner, placeholders until then (DESIGN §6).
 
-1. **Official hosted instance?** (App PRD open question 5.) Changes the privacy policy scope and the primary CTA.
+Still open:
+1. **App backend hosting.** Will Jaminly run an official hosted instance of `warranty-api` for app users, or is the app self-host only? (App PRD open question 5.) This decides whether the privacy policy covers a hosted service and whether the hero CTA says "Get the app" or "View on GitHub".
 2. **Email provider** for reminders (App PRD open question 4), to name as a processor.
-3. **Bahasa Melayu version** in v1, or later?
-4. **Backup retention period** for deleted accounts.
-5. **Lifestyle photography:** will you provide or generate photos (receipt on a kitchen counter, a broken appliance, etc.)? See DESIGN §6.
+3. **More languages?** English and Malay are confirmed; anything else (e.g. Chinese, Tamil) later?
 
 ## 12. Milestones
 
 | Phase | Scope |
 |---|---|
 | **W0 — Scaffold** ✅ | Fresh Astro in `apps/web`, builds in the workspace. |
-| **W1 — Foundation** | Tailwind v4, tokens, font, base layout, SEO component, header, footer, 404. |
-| **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7. Update `links.ts` in the app. (Can ship before the landing page: stores only need these URLs.) |
-| **W3 — Landing page** | All Home sections, real app screenshots, FAQ with JSON-LD. |
+| **W1 — Foundation** | Tailwind v4, tokens, font, i18n routing and dictionaries, base layout, SEO component (with `hreflang`), header with language switcher, footer, 404. |
+| **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7, in English and Malay. (Can ship before the landing page: stores only need these URLs.) |
+| **W3 — Landing page** | All Home sections in both languages, real app screenshots, photo placeholders, FAQ with JSON-LD. |
 | **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy to Vercel on `jaminly.app` (§9.1), switch the app's `links.ts`, Search Console. |
-| **v2** | Bahasa Melayu, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |
+| **v2** | Swap in supplied photos (can happen any time), more languages, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |

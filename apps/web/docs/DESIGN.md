@@ -1,6 +1,6 @@
 # Jaminly Website — Design
 
-Status: Draft v0.1 · Last updated 2026-09-27 · Related: [PRD](./PRD.md), [App DESIGN](../../warranty-ui/docs/DESIGN.md)
+Status: Draft v0.2 · Last updated 2026-09-29 · Related: [PRD](./PRD.md), [App DESIGN](../../warranty-ui/docs/DESIGN.md)
 
 The visual design for the Jaminly marketing site and legal pages. It follows the **`design-taste-frontend`** skill ("taste skill", vendored at [`.claude/skills/design-taste-frontend/SKILL.md`](../../../.claude/skills/design-taste-frontend/SKILL.md)). Section numbers such as "taste §4.7" point into that file. Brand decisions (name, voice, colour, logo) come from the app's [DESIGN §2](../../warranty-ui/docs/DESIGN.md#2-brand) and are not redefined here.
 
@@ -8,7 +8,7 @@ The visual design for the Jaminly marketing site and legal pages. It follows the
 
 ## 1. Design Read (taste §0)
 
-> **Reading this as:** a consumer mobile-app landing page for everyday people in Malaysia and beyond who buy phones, laptops and appliances, with a calm, tidy, trust-first language, leaning toward native Astro + Tailwind v4 on the app's own tokens, a real app screenshot as the hero, and restrained CSS-only motion.
+> **Reading this as:** a bilingual (English and Bahasa Melayu) consumer mobile-app landing page for everyday people in Malaysia and beyond who buy phones, laptops and appliances, with a calm, tidy, trust-first language, leaning toward native Astro + Tailwind v4 on the app's own tokens, a real app screenshot as the hero, and restrained CSS-only motion.
 
 Why:
 - **Page kind:** landing page + legal pages. Greenfield (no existing site), but the brand already exists in the app, so brand tokens are fixed input (taste §0.A.5).
@@ -124,6 +124,8 @@ Astro components in `src/components/`, all server-rendered with no client JS unl
 | `BentoCell.astro` | `tone: plain \| tinted \| image`, `span` props. |
 | `Faq.astro` | native `<details>/<summary>` list, animated open with CSS `interpolate-size` where supported; emits `FAQPage` JSON-LD from the same data. |
 | `LegalLayout.astro` | reading column, "Last updated" line, generated table of contents from headings, "Back to top" link. |
+| `LanguageSwitcher.astro` | plain links to the same page in each language (PRD I18N-5). Header: compact "EN" / "BM" with `aria-label="English"` / `aria-label="Bahasa Melayu"`, `hreflang` and `lang` on each link, current language marked with `aria-current`. Footer: full names. No dropdown, no flags (flags are countries, not languages), no JS. |
+| `PhotoSlot.astro` | `slot` + `alt` props. If `src/assets/photos/<slot>.jpg` exists, renders it with `<Picture>`; otherwise renders the placeholder in §6.1. |
 | `StoreBadges.astro` | official Apple / Google badge SVGs (their brand assets, unmodified) once listings exist; hidden until then. |
 
 ## 5. Page Layouts
@@ -135,13 +137,13 @@ Eight sections, six different layout families (taste §4.7 requires ≥ 4 and no
 | # | Section | Layout family | Eyebrow |
 |---|---|---|---|
 | 1 | Hero | Asymmetric split (7/5) | none |
-| 2 | Problem | Editorial statement (large type, no asset) | none |
+| 2 | Problem | Editorial statement + one wide photo | none |
 | 3 | Features | Bento grid, 5 cells | ✅ "What it does" |
 | 4 | How it works | Sticky-left heading + stepped screenshots | none |
 | 5 | Privacy promise | Tinted band, 2×2 pledge grid | none |
 | 6 | Open source | Split: copy + real command block | ✅ "Open source" |
 | 7 | FAQ | Single-column accordion | none |
-| 8 | Closing CTA | Centred short statement | none |
+| 8 | Closing CTA | Photo, then centred short statement | none |
 
 Eyebrows used: 2 of the allowed 3.
 
@@ -149,7 +151,7 @@ Eyebrows used: 2 of the allowed 3.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ [logo] Jaminly        Features  Privacy  FAQ  GitHub  [Get app]│  64px
+│ [logo] Jaminly   Features  Privacy  FAQ  GitHub  EN/BM [Get app]│  64px
 ├──────────────────────────────────────────────────────────────┤
 │                                           ┌──────────┐        │
 │  Keep every receipt.                      │          │        │
@@ -176,7 +178,7 @@ Editorial statement, one column, `h2`-sized text across three short lines, each 
 
 > Receipts fade. Warranties expire quietly. And most people never check what's actually covered.
 
-`--text-secondary` for the first two sentences, `--text` for the last to give it weight. No icons, no cards. This is the only section with no visual asset, on purpose: it breaks the rhythm between the hero and the bento.
+`--text-secondary` for the first two sentences, `--text` for the last to give it weight. No icons, no cards. Below the statement, one full-container-width photo (slot `problem`, §6.1), 20 px radius, no text over it. It's the first lifestyle photo on the page, so the page doesn't read as screenshots only.
 
 ### 5.4 Features bento (HOME-3)
 
@@ -237,7 +239,7 @@ Single column, `max-w-[65ch]`, `<details>` rows separated by one `border-b` each
 
 ### 5.9 Closing CTA (HOME-8)
 
-Short centred statement (taste §4.3 allows centred for a closing message): "Your next receipt is the first one." + the same primary button as the hero. Same label, same intent (taste §4.5: one label per intent).
+Photo first (slot `closing`, §6.1, 20 px radius, no text over it), then a short centred statement below it (taste §4.3 allows centred for a closing message): "Your next receipt is the first one." + the same primary button as the hero. Same label, same intent (taste §4.5: one label per intent).
 
 ### 5.10 Legal pages
 
@@ -251,14 +253,30 @@ Short centred statement (taste §4.3 allows centred for a closing message): "You
 
 ## 6. Imagery (taste §4.8)
 
-- **App screenshots are the main visuals.** Captured with Playwright from `warranty-ui` running on web (`EXPO_PUBLIC_USE_MOCK_API=true`, `EXPO_PUBLIC_MOCK_AUTH=true`) at a 390×844 viewport, in light and dark mode. Sample data uses realistic Malaysian products and stores (e.g. "Samsung Galaxy S25, Senheng", "Panasonic inverter aircond, Harvey Norman"), not "Product 1" or "Acme" (taste §9.D).
+- **App screenshots are the main product visuals.** Captured with Playwright from `warranty-ui` running on web (`EXPO_PUBLIC_USE_MOCK_API=true`, `EXPO_PUBLIC_MOCK_AUTH=true`) at a 390×844 viewport, in light and dark mode, and once per language when the app itself is translated (until then, English screenshots on both). Sample data uses realistic Malaysian products and stores (e.g. "Samsung Galaxy S25, Senheng", "Panasonic inverter aircond, Harvey Norman"), not "Product 1" or "Acme" (taste §9.D).
 - **No div-built fake UI** (taste §9.E). Every product visual is a real screenshot or a real crop of one.
-- **Lifestyle photography (optional, W3):** two slots, marked in code as `<!-- TODO: image -->` until provided (taste §4.8 last-resort rule):
-  1. Problem section alternative: a faded thermal receipt on a table, 1600×1000.
-  2. OG image background: a hand holding a phone next to a boxed appliance, 1200×630.
-  No image-generation tool is available in this environment, so these need to be generated or supplied separately.
-- **OG images:** built at compile time from an Astro endpoint (logo + page title on `--bg`), so every page has one without manual design work.
-- No captions on images, no tags overlaid on images (taste §9.F).
+- **Lifestyle photos are supplied by the owner.** Until they arrive, each slot shows a placeholder (§6.1). No stock or Picsum photos in the meantime: a placeholder that is obviously a placeholder is better than an unrelated photo that looks final.
+- **OG images:** built at compile time from an Astro endpoint (logo + page title on `--bg`, per language). When the `og` photo arrives, it becomes the background of the default OG image.
+- No captions on images, no tags or text overlaid on photos (taste §9.F).
+
+### 6.1 Photo slots
+
+Drop a file named after its slot into `apps/web/src/assets/photos/` and `PhotoSlot.astro` picks it up at build time; no code change needed. Astro generates AVIF/WebP and responsive sizes from the original.
+
+| Slot (file name) | Where | Aspect / min size | Subject (suggestion) |
+|---|---|---|---|
+| `problem.jpg` | Problem section, under the statement | 21:9, ≥ 2400×1030 | A faded thermal receipt next to a product box or appliance on a table |
+| `closing.jpg` | Closing CTA, above the statement | 16:9, ≥ 2000×1125 | Everyday home scene with a phone in hand near a TV, fridge or aircond |
+| `og.jpg` | Default social-share image background | 1200×630 exactly | Calm, uncluttered; the left 55% stays plain enough for the title text |
+
+Photo guidelines:
+- Landscape, natural light, cool-neutral tones that sit well next to the brand blue in both light and dark mode. No heavy filters.
+- No readable personal data: blur names, addresses and card numbers on any receipt.
+- No text or logos baked into the photo (text is translated; photos aren't). No third-party brand logos in focus.
+- People are optional; if faces are visible, you need their permission to use the photo.
+- JPEG, sRGB, under 5 MB each. Alt text is written per language in the dictionaries (`photo.problem.alt` etc.), not in the file.
+
+**Placeholder look** (while a file is missing): a box at the slot's exact aspect ratio (so the layout and CLS don't change when the photo arrives), `--bg-elevated` fill, 1 px dashed `--border`, 20 px radius, with a centred `ph:image` icon and a `small` label, e.g. "Photo: problem.jpg · 2400×1030". The build prints a warning listing missing slots, and the pre-flight check (§10) fails until all three are filled.
 
 ## 7. Motion (taste §5, §6, band 4–7)
 
@@ -285,6 +303,15 @@ Rules:
 - One label per intent: **"Get the app"** (download / web app), **"View on GitHub"** (source). No "Download now" or "Try it free" elsewhere on the page.
 - Spelling: British/Malaysian English ("colour", "organise"), matching the app.
 
+### 8.1 Bahasa Melayu
+
+- Standard Malaysian Malay (Dewan Bahasa dan Pustaka spelling), same plain, short voice as English. Use the everyday words people search for: "waranti", "resit", "aplikasi", "peringatan".
+- Written or reviewed by a native speaker (PRD I18N-9). Translate meaning, not word for word; headlines may be rewritten to fit.
+- "Jaminly" is never translated or inflected. Keep "GitHub", "Google", "App Store" as they are.
+- Malay runs about 20–30% longer. Every layout rule is checked in Malay too: hero headline ≤ 2 lines, CTA labels on one line (e.g. "Dapatkan aplikasi"), nav on one line at `lg` ("Ciri", "Privasi", "Soalan lazim").
+- The em-dash ban and filler-word rules apply equally.
+- One label per intent in each language: "Get the app" ↔ "Dapatkan aplikasi", "View on GitHub" ↔ "Lihat di GitHub".
+
 ## 9. Accessibility
 
 - Skip-to-content link, first focusable element.
@@ -293,6 +320,7 @@ Rules:
 - All screenshots have descriptive `alt` ("Jaminly home screen listing three warranties: one active, one expiring in 12 days, one expired").
 - Tap targets ≥ 44×44 px.
 - Tested with keyboard only, VoiceOver (iOS Safari) and 200% zoom.
+- Correct `lang` on every page (and on the switcher links), so screen readers pronounce Malay text with a Malay voice.
 
 ## 10. Pre-flight Checklist (taste §14, adapted)
 
@@ -316,7 +344,10 @@ Run before W4 sign-off. Items that don't apply to this site (GSAP, Motion librar
 - [ ] Reduced motion: nothing moves; content fully visible
 - [ ] Nav on one line at `lg`, height ≤ 80 px
 - [ ] Mobile: every multi-column section collapses to one column below 768 px, no horizontal scroll
-- [ ] Lighthouse ≥ 95 (Performance, Accessibility, Best Practices, SEO) on Home and `/privacy`
+- [ ] Every check above passes in **both English and Malay** (headline lines, CTA wrap, nav width)
+- [ ] All three photo slots filled; no placeholder left in the build output
+- [ ] `hreflang` pairs and `x-default` present on every page; the switcher lands on the same page
+- [ ] Lighthouse ≥ 95 (Performance, Accessibility, Best Practices, SEO) on `/`, `/ms/`, `/privacy` and `/ms/privacy`
 
 ## 11. Where This Deviates From the Taste Skill
 
@@ -328,11 +359,11 @@ The skill's defaults assume React/Next. This site is Astro, so some rules are ap
 | Fonts via `next/font` | `@fontsource-variable` self-hosted | Same goal (self-hosted, `swap`), Astro-native. |
 | Icons via `@phosphor-icons/react` | Phosphor via `astro-icon` | Same family, rendered at build time. |
 | No pure white | White text on primary buttons | Contrast on the brand blue; large surfaces are still off-white. |
-| Picsum placeholders when no images | Real app screenshots + TODO slots | Picsum photos are unrelated stock; real screenshots show the actual product. |
+| Picsum placeholders when no images | Real app screenshots + labelled photo slots (§6.1) until the owner's photos arrive | Picsum photos are unrelated stock; real screenshots show the actual product. |
 
 ## 12. Open Design Questions
 
 1. **Hero headline:** "Keep every receipt. Claim every warranty." is the working draft. Alternatives: "Never miss a warranty claim." / "Your warranties, sorted."
 2. **Store badges vs. web app** as the hero CTA before the store launch (PRD §5.1).
-3. **Lifestyle photos:** supply them, or keep the site screenshot-only (§6)?
-4. **Bahasa Melayu:** if added, check that the hero headline still fits in 2 lines (Malay strings run ~20–30% longer).
+3. **Malay hero headline:** needs its own wording, not a literal translation. Draft to review with a native speaker: "Simpan setiap resit. Tuntut setiap waranti."
+
