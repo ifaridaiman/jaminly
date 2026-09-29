@@ -1,0 +1,54 @@
+---
+// HOME-1 (DESIGN §5.2): asymmetric split, copy left, real screenshots right.
+import Button from '../Button.astro';
+import Screenshot from '../Screenshot.astro';
+import { getLocale, localizedPath, t } from '../../i18n/utils';
+import { screens } from '../../lib/screens';
+import { anchors, REPO_URL } from '../../lib/site';
+
+const locale = getLocale(Astro.currentLocale);
+const strings = t(locale);
+const home = localizedPath(locale, '/');
+---
+
+<section
+  class="container-page grid items-center gap-14 pb-20 pt-12 md:pt-20 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-12 lg:gap-8 lg:py-16"
+>
+  <div class="lg:col-span-7">
+    <h1 class="rise text-display text-balance">{strings.home.headline}</h1>
+    <p class="rise mt-6 max-w-[46ch] text-lead text-text-secondary" style="--i: 1">
+      {strings.home.lead}
+    </p>
+    <div class="rise mt-10 flex flex-col gap-3 sm:flex-row" style="--i: 2">
+      <Button href={`${home}#${anchors.getApp}`}>{strings.cta.getApp}</Button>
+      <Button href={REPO_URL} variant="secondary">{strings.cta.viewGithub}</Button>
+    </div>
+  </div>
+
+  <div class="relative mx-auto w-full max-w-[26rem] lg:col-span-5 lg:max-w-none">
+    <div class="rise relative mx-auto w-[72%] sm:w-[16.5rem] lg:ml-auto lg:mr-4 xl:mr-10" style="--i: 4">
+      <div
+        class="shot absolute -left-[48%] top-12 hidden w-full origin-top-right scale-90 opacity-95 sm:block"
+        aria-hidden="true"
+      >
+        <Screenshot
+          {...screens.detailNew}
+          alt=""
+          widths={[300, 480, 600]}
+          sizes="(min-width: 640px) 240px, 0px"
+          class="block h-auto w-full"
+        />
+      </div>
+      <div class="shot relative">
+        <Screenshot
+          {...screens.home}
+          alt={strings.home.heroAlt}
+          widths={[300, 480, 640, 780]}
+          sizes="(min-width: 640px) 264px, 72vw"
+          priority
+          class="block h-auto w-full"
+        />
+      </div>
+    </div>
+  </div>
+</section>

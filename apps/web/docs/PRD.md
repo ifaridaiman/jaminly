@@ -189,7 +189,7 @@ The policy must match what the app does. This list comes from App PRD §6, §7 a
 | Integrations | `@astrojs/sitemap` (with its `i18n` option for alternates), `@astrojs/mdx` (if FAQ or legal pages need components) |
 | Icons | Phosphor via `astro-icon` + `@iconify-json/ph` (rendered to inline SVG at build time, no runtime JS) |
 | Fonts | `@fontsource-variable/plus-jakarta-sans` |
-| Screenshots | Captured from `warranty-ui` running on web with mock data (Playwright), exported to `src/assets/screens/` |
+| Screenshots | Captured from `warranty-ui` running on web with mock data by `pnpm --filter jaminly-web screens` (Playwright), saved to `src/assets/screens/` |
 | Checks | `astro check` (types), `astro build`, Lighthouse CI on the built output |
 | Hosting | Vercel, static output (no adapter needed). Not set up yet: local only for now (§9.1) |
 
@@ -236,6 +236,6 @@ The legal pages still say "(Provider to be confirmed)" for the email provider an
 | **W0 — Scaffold** ✅ | Fresh Astro in `apps/web`, builds in the workspace. |
 | **W1 — Foundation** ✅ | Tailwind v4, tokens, font, i18n routing and dictionaries, base layout, SEO component (with `hreflang`), header with language switcher, footer, 404. |
 | **W2 — Legal** ✅ | Privacy, terms and delete-account pages with the content in §7, in English and Malay. (Can ship before the landing page: stores only need these URLs.) |
-| **W3 — Landing page** | All Home sections in both languages, real app screenshots, photo placeholders, FAQ with JSON-LD. |
+| **W3 — Landing page** ✅ | All Home sections in both languages, real app screenshots, photo placeholders, FAQ with JSON-LD. |
 | **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy to Vercel on `jaminly.app` (§9.1), switch the app's `links.ts`, Search Console. |
 | **v2** | Swap in supplied photos (can happen any time), more languages, blog/guides content collection ("How long is a phone warranty in Malaysia?"), app store badges and Smart App Banner. |

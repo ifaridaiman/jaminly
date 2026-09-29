@@ -14,6 +14,7 @@ pnpm --filter jaminly-web dev       # http://localhost:4321
 pnpm --filter jaminly-web check     # type-check .astro and .ts files
 pnpm --filter jaminly-web build     # static output in apps/web/dist
 pnpm --filter jaminly-web preview   # serve the built site
+pnpm --filter jaminly-web screens   # re-capture app screenshots from warranty-ui (Playwright)
 ```
 
 ## Layout
@@ -23,7 +24,10 @@ src/
   styles/global.css     design tokens (colours, type, radii) + Tailwind v4
   i18n/                 locale config, en.ts / ms.ts dictionaries, URL helpers
   layouts/BaseLayout    <html>, <head>, header, footer
-  components/           Seo, Header, Footer, Button, LanguageSwitcher
+  components/           Seo, Header, Footer, Button, LanguageSwitcher, Screenshot, PhotoSlot
+  components/home/      the eight Home sections
+  content/legal/        privacy, terms, delete-account in en/ and ms/
+  assets/screens/       app screenshots (light + dark), made by `pnpm screens`
   views/                page bodies shared by every language
   pages/                routes: `/` (English) and `/ms/` (Malay) render the same view
   assets/photos/        drop owner-supplied photos here (see its README)

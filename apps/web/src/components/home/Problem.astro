@@ -1,0 +1,20 @@
+---
+// HOME-2 (DESIGN §5.3): editorial statement, then one wide photo.
+import PhotoSlot from '../PhotoSlot.astro';
+import { getLocale, t } from '../../i18n/utils';
+
+const strings = t(getLocale(Astro.currentLocale));
+---
+
+<section class="container-page py-20 md:py-28">
+  <h2 class="reveal max-w-[30ch] text-h2 text-balance">
+    <span class="text-text-secondary">{strings.problem.lineA} {strings.problem.lineB}</span>{' '}
+    {strings.problem.lineC}
+  </h2>
+  <PhotoSlot
+    name="problem"
+    alt={strings.problem.photoAlt}
+    sizes="(min-width: 1200px) 1136px, calc(100vw - 2rem)"
+    class="reveal mt-12 md:mt-16"
+  />
+</section>

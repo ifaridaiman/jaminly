@@ -188,17 +188,19 @@ Five features → exactly five cells (taste §4.7 bento cell count). Desktop gri
 
 ```
 ┌───────────────────────────────┬───────────────────┐
-│ Receipt vault      (span 7,   │ Reminders  (span 5)│
-│ image: receipt viewer shot)   │ status legend      │
-│                               │ Active/Soon/Expired│
-├──────────────┬────────────────┴───┬───────────────┤
-│ Coverage     │ Phone and web       │ Open source   │
-│ (span 4,     │ (span 4, image:     │ (span 4,      │
-│  chips shot) │  phone + browser)   │  tinted)      │
-└──────────────┴─────────────────────┴───────────────┘
+│ Receipt vault      (span 7)   │ Reminders (span 5) │
+│ crop: warranty + receipt      │ crop: status cards │
+├───────────────────┬───────────┴───────────────────┤
+│ Coverage (span 5) │ Phone and web (span 7)         │
+│ crop: coverage    │ screenshot: web app            │
+├───────────────────┴───────────────────────────────┤
+│ Free, with no catch (span 12, tinted, one line)    │
+└────────────────────────────────────────────────────┘
 ```
 
-- Background diversity (taste §4.7): cell 1 and 4 carry real screenshots, cell 5 is `--primary-soft` tinted, cells 2 and 3 are `--bg-elevated` with a real UI crop (status badges, coverage chips) cut from the app's screenshots, not rebuilt with divs.
+As built (W3). The first sketch had three equal cells in the second row, which taste §9.C bans; rows of 7/5, 5/7 and 12 keep the rhythm uneven.
+
+- Background diversity (taste §4.7): four cells carry real screenshots or crops of them, the fifth is `--primary-soft` tinted. Nothing is rebuilt with divs.
 - Each cell: `ph:` icon, `h3` (≤ 4 words), one sentence (≤ 20 words).
 - Mobile: single column in the same order.
 
@@ -208,20 +210,20 @@ Sticky left column (`lg:sticky top-24`) with the `h2` "Three steps, under a minu
 
 1. **Snap the receipt**: Add Warranty screen with the camera open.
 2. **Set the warranty**: the form with warranty length and coverage filled in.
-3. **Get reminded**: a notification screenshot / Expiring soon section.
+3. **Get reminded**: the detail screen of a warranty that expires in 12 days. (An OS notification can't be captured from the web build.)
 
 Mobile: sticky is dropped; heading then steps stacked.
 
 ### 5.6 Privacy promise (HOME-5)
 
-Full-width band on `--primary-soft` (a tint, not an inverted section). `h2` "Your receipts stay yours." Then a 2×2 grid of pledges, each an icon + one short line:
+Full-width band on `--primary-soft` (a tint, not an inverted section). `h2` "Your receipts stay yours." Then the pledges in one row of four on desktop, 2×2 on phones, each an icon + one short line. Stacked, not split, so how-it-works, privacy and open source aren't three split sections in a row (taste §4.7 zigzag cap):
 
 - No ads. Ever.
 - We never sell your data.
 - Receipts are private and encrypted.
 - Delete everything, anytime.
 
-Below: a text link "Read the privacy policy". Mobile: 1 column.
+Below: a text link "Read the privacy policy".
 
 ### 5.7 Open source (HOME-6)
 
@@ -257,6 +259,8 @@ Photo first (slot `closing`, §6.1, 20 px radius, no text over it), then a short
 
 - **App screenshots are the main product visuals.** Captured with Playwright from `warranty-ui` running on web (`EXPO_PUBLIC_USE_MOCK_API=true`, `EXPO_PUBLIC_MOCK_AUTH=true`) at a 390×844 viewport, in light and dark mode, and once per language when the app itself is translated (until then, English screenshots on both). Sample data uses realistic Malaysian products and stores (e.g. "Samsung Galaxy S25, Senheng", "Panasonic inverter aircond, Harvey Norman"), not "Product 1" or "Acme" (taste §9.D).
 - **No div-built fake UI** (taste §9.E). Every product visual is a real screenshot or a real crop of one.
+- **How they're made:** `pnpm --filter jaminly-web screens` (`scripts/screens/capture.mjs`) exports the app for the web, signs in with mock auth, adds a Samsung Galaxy S25 with a sample receipt through the real add flow, and saves light and dark captures plus crops to `src/assets/screens/`. The receipt is rendered from `scripts/screens/sample-receipt.html`: a made-up store ("Sinar Elektrik"), watermarked SAMPLE. Re-run it whenever the app's UI changes.
+- **Colour scheme:** `<Screenshot>` serves the dark capture under `prefers-color-scheme: dark` and the light one otherwise, as AVIF with WebP fallback.
 - **Lifestyle photos are supplied by the owner.** Until they arrive, each slot shows a placeholder (§6.1). No stock or Picsum photos in the meantime: a placeholder that is obviously a placeholder is better than an unrelated photo that looks final.
 - **OG images:** built at compile time from an Astro endpoint (logo + page title on `--bg`, per language). When the `og` photo arrives, it becomes the background of the default OG image.
 - No captions on images, no tags or text overlaid on photos (taste §9.F).

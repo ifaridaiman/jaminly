@@ -1,0 +1,75 @@
+---
+// HOME-7 (DESIGN §5.8): native <details> accordion, first answer open. The same data
+// feeds the FAQPage JSON-LD in HomePage.astro.
+import { Icon } from 'astro-icon/components';
+import { getLocale, localizedPath, t } from '../../i18n/utils';
+import { anchors, REPO_URL } from '../../lib/site';
+
+const locale = getLocale(Astro.currentLocale);
+const faq = t(locale).faq;
+const more: Partial<Record<keyof typeof faq.items, { href: string; label: string }>> = {
+  receipts: { href: localizedPath(locale, '/privacy'), label: faq.more.privacy },
+  selfHost: { href: REPO_URL, label: faq.more.github },
+  deleteData: { href: localizedPath(locale, '/delete-account'), label: faq.more.deleteAccount },
+};
+const items = Object.entries(faq.items) as [keyof typeof faq.items, { q: string; a: string }][];
+---
+
+<section id={anchors.faq} class="container-page py-20 md:py-28">
+  <div class="mx-auto max-w-[65ch]">
+    <h2 class="text-h2">{faq.title}</h2>
+    <div class="mt-10 border-t border-border">
+      {
+        items.map(([id, item], index) => (
+          <details class="faq group border-b border-border" open={index === 0}>
+            <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 py-5 text-h3">
+              {item.q}
+              <Icon
+                name="ph:plus"
+                size={22}
+                aria-hidden="true"
+                class="shrink-0 text-text-secondary transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none"
+              />
+            </summary>
+            <div class="pb-6 pr-10 text-text-secondary">
+              <p>{item.a}</p>
+              {more[id] && (
+                <a
+                  href={more[id].href}
+                  class="mt-3 inline-flex min-h-11 items-center gap-2 font-semibold text-primary hover:text-primary-hover"
+                >
+                  {more[id].label}
+                  <Icon name="ph:arrow-right" size={16} aria-hidden="true" />
+                </a>
+              )}
+            </div>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  /* Smooth open/close where supported (DESIGN §7); instant elsewhere. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (interpolate-size: allow-keywords) {
+      .faq {
+        interpolate-size: allow-keywords;
+      }
+      .faq::details-content {
+        height: 0;
+        overflow: clip;
+        transition:
+          height 250ms var(--ease-out-expo),
+          content-visibility 250ms allow-discrete;
+      }
+      .faq[open]::details-content {
+        height: auto;
+      }
+    }
+  }
+</style>

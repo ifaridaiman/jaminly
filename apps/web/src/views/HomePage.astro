@@ -1,14 +1,19 @@
 ---
-// Home (PRD §5.1). W1 ships the hero copy only; the remaining sections,
-// screenshots and photos land in W3.
-import Button from '../components/Button.astro';
+// Home (PRD §5.1, DESIGN §5.1). Eight sections, six layout families, two eyebrows.
+import Closing from '../components/home/Closing.astro';
+import Faq from '../components/home/Faq.astro';
+import Features from '../components/home/Features.astro';
+import Hero from '../components/home/Hero.astro';
+import HowItWorks from '../components/home/HowItWorks.astro';
+import OpenSource from '../components/home/OpenSource.astro';
+import PrivacyPromise from '../components/home/PrivacyPromise.astro';
+import Problem from '../components/home/Problem.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getLocale, localizedPath, t } from '../i18n/utils';
-import { anchors, REPO_URL } from '../lib/site';
+import { getLocale, t } from '../i18n/utils';
+import { CONTACT_EMAIL, REPO_URL } from '../lib/site';
 
 const locale = getLocale(Astro.currentLocale);
 const strings = t(locale);
-const home = localizedPath(locale, '/');
 
 const jsonLd = [
   {
@@ -28,32 +33,29 @@ const jsonLd = [
     name: 'Jaminly',
     url: Astro.site?.href,
     logo: new URL('/apple-touch-icon.png', Astro.site).href,
-    email: 'app@jaminly.app',
+    email: CONTACT_EMAIL,
     sameAs: [REPO_URL],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    inLanguage: locale,
+    mainEntity: Object.values(strings.faq.items).map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
   },
 ];
 ---
 
 <BaseLayout title={strings.home.title} description={strings.home.description} path="/" jsonLd={jsonLd}>
-  <section class="container-page grid items-center gap-12 pb-20 pt-16 md:pt-24 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-12">
-    <div class="lg:col-span-8 xl:col-span-7">
-      <h1 class="rise text-display text-balance">{strings.home.headline}</h1>
-      <p class="rise mt-6 max-w-[46ch] text-lead text-text-secondary" style="--i: 1">
-        {strings.home.lead}
-      </p>
-      <div class="rise mt-10 flex flex-col gap-3 sm:flex-row" style="--i: 2">
-        <Button href={`${home}#${anchors.getApp}`}>{strings.cta.getApp}</Button>
-        <Button href={REPO_URL} variant="secondary">{strings.cta.viewGithub}</Button>
-      </div>
-    </div>
-
-    <!-- TODO(W3): real app screenshots (DESIGN §5.2, §6). -->
-    <div
-      class="rise flex aspect-[390/844] w-full max-w-[20rem] items-center justify-center justify-self-center rounded-lg border border-dashed border-border bg-bg-elevated p-6 text-center text-small text-text-secondary lg:col-span-4 xl:col-span-5"
-      style="--i: 4"
-      aria-hidden="true"
-    >
-      App screenshot · W3
-    </div>
-  </section>
+  <Hero />
+  <Problem />
+  <Features />
+  <HowItWorks />
+  <PrivacyPromise />
+  <OpenSource />
+  <Faq />
+  <Closing />
 </BaseLayout>

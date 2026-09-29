@@ -13,3 +13,13 @@ export const anchors = {
   faq: 'faq',
   getApp: 'get-app',
 } as const;
+
+/**
+ * Store and web-app links. All null until launch; the closing section then shows
+ * these instead of the "follow on GitHub" note (PRD §5.1).
+ */
+export const appLinks: { appStore: string | null; googlePlay: string | null; webApp: string | null } = {
+  appStore: null,
+  googlePlay: null,
+  webApp: null,
+};

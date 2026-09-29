@@ -1,0 +1,41 @@
+---
+// HOME-5 (DESIGN §5.6): tinted band (same theme, not inverted), heading over four pledges.
+// Stacked rather than split so no three split sections run in a row (taste §4.7).
+import { Icon } from 'astro-icon/components';
+import { getLocale, localizedPath, t } from '../../i18n/utils';
+import { anchors } from '../../lib/site';
+
+const locale = getLocale(Astro.currentLocale);
+const p = t(locale).privacy;
+const pledges = [
+  { icon: 'ph:prohibit', text: p.noAds },
+  { icon: 'ph:hand-coins', text: p.noSelling },
+  { icon: 'ph:lock-key', text: p.encrypted },
+  { icon: 'ph:trash', text: p.deleteAnytime },
+];
+---
+
+<section id={anchors.privacy} class="bg-primary-soft">
+  <div class="container-page py-20 md:py-24">
+    <h2 class="max-w-[20ch] text-h2 text-balance">{p.title}</h2>
+    <ul class="mt-12 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4 lg:gap-x-8">
+      {
+        pledges.map((pledge) => (
+          <li class="reveal">
+            <span class="flex size-12 items-center justify-center rounded-md bg-bg text-primary">
+              <Icon name={pledge.icon} size={24} aria-hidden="true" />
+            </span>
+            <p class="mt-4 max-w-[18ch] text-lead font-semibold">{pledge.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <a
+      href={localizedPath(locale, '/privacy')}
+      class="mt-12 inline-flex min-h-11 items-center gap-2 font-semibold text-primary hover:text-primary-hover"
+    >
+      {p.readPolicy}
+      <Icon name="ph:arrow-right" size={18} aria-hidden="true" />
+    </a>
+  </div>
+</section>

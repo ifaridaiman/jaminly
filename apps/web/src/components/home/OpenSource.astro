@@ -1,0 +1,55 @@
+---
+// HOME-6 (DESIGN §5.7): copy + a real, copyable command block (no fake terminal chrome).
+import { Icon } from 'astro-icon/components';
+import Button from '../Button.astro';
+import { getLocale, t } from '../../i18n/utils';
+import { REPO_URL } from '../../lib/site';
+
+const strings = t(getLocale(Astro.currentLocale));
+const o = strings.openSource;
+const commands = [`git clone ${REPO_URL}`, 'cd jaminly', 'pnpm install', 'pnpm dev'].join('\n');
+---
+
+<section class="container-page grid gap-10 py-20 md:py-28 lg:grid-cols-12 lg:items-center lg:gap-8">
+  <div class="lg:col-span-5">
+    <p class="eyebrow">{o.eyebrow}</p>
+    <h2 class="mt-3 max-w-[18ch] text-h2 text-balance">{o.title}</h2>
+    <p class="mt-4 max-w-[40ch] text-lead text-text-secondary">{o.body}</p>
+    <Button href={REPO_URL} variant="secondary" class="mt-8">
+      <Icon name="ph:github-logo" size={20} aria-hidden="true" />
+      {strings.cta.viewGithub}
+    </Button>
+  </div>
+
+  <figure class="reveal min-w-0 lg:col-span-6 lg:col-start-7">
+    <div class="flex items-center justify-between gap-4">
+      <figcaption class="text-small text-text-secondary">{o.commandsLabel}</figcaption>
+      <button
+        type="button"
+        class="copy-button hidden min-h-11 items-center gap-2 rounded-sm px-3 text-small font-semibold text-primary hover:bg-bg-elevated"
+        data-copy={commands}
+        data-copied-label={o.copied}
+      >
+        <Icon name="ph:copy" size={18} aria-hidden="true" />
+        <span>{o.copy}</span>
+      </button>
+    </div>
+    <pre
+      class="mt-2 overflow-x-auto rounded-sm border border-border bg-bg-elevated p-5 font-mono text-small leading-7"><code>{commands}</code></pre>
+  </figure>
+</section>
+
+<script>
+  // Progressive enhancement: the button only appears when the Clipboard API exists.
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.copy-button')) {
+    if (!navigator.clipboard) continue;
+    button.classList.replace('hidden', 'inline-flex');
+    const label = button.querySelector('span')!;
+    const original = label.textContent;
+    button.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(button.dataset.copy ?? '');
+      label.textContent = button.dataset.copiedLabel ?? original;
+      setTimeout(() => (label.textContent = original), 2000);
+    });
+  }
+</script>

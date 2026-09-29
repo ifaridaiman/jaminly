@@ -269,3 +269,32 @@
     }
   }
 }
+
+/* Scroll reveal (DESIGN §7): fade up as an element enters the viewport.
+ * Only where scroll-driven animations exist; otherwise content is simply visible. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@utility eyebrow {
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  font-weight: var(--text-eyebrow--font-weight);
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* Screenshot frame (DESIGN §3.3): 20px radius, hairline border, primary-tinted shadow. */
+@utility shot {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 60px -20px color-mix(in srgb, var(--primary) 20%, transparent);
+  overflow: hidden;
+}

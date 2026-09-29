@@ -1,0 +1,42 @@
+---
+// HOME-8 (DESIGN §5.9): photo, then a short centred statement. This is also the
+// `#get-app` target: store buttons appear once `appLinks` are filled in.
+import Button from '../Button.astro';
+import PhotoSlot from '../PhotoSlot.astro';
+import { getLocale, t } from '../../i18n/utils';
+import { anchors, appLinks, REPO_URL } from '../../lib/site';
+
+const strings = t(getLocale(Astro.currentLocale));
+const stores = [
+  { href: appLinks.appStore, label: 'App Store' },
+  { href: appLinks.googlePlay, label: 'Google Play' },
+].filter((store): store is { href: string; label: string } => Boolean(store.href));
+---
+
+<section id={anchors.getApp} class="container-page py-20 md:py-28">
+  <PhotoSlot name="closing" alt={strings.closing.photoAlt} sizes="(min-width: 1200px) 1136px, calc(100vw - 2rem)" />
+  <div class="reveal mx-auto mt-14 max-w-[40rem] text-center">
+    <h2 class="text-h2 text-balance">{strings.closing.title}</h2>
+    {
+      stores.length > 0 ? (
+        <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          {stores.map((store) => (
+            <Button href={store.href}>{store.label}</Button>
+          ))}
+          {appLinks.webApp && (
+            <Button href={appLinks.webApp} variant="secondary">
+              {strings.cta.getApp}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <>
+          <p class="mx-auto mt-4 max-w-[46ch] text-lead text-text-secondary">{strings.closing.comingSoon}</p>
+          <Button href={REPO_URL} class="mt-8">
+            {strings.cta.viewGithub}
+          </Button>
+        </>
+      )
+    }
+  </div>
+</section>

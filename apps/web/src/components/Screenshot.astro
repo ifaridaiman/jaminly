@@ -1,0 +1,48 @@
+---
+// A real app screenshot (DESIGN §6) in the viewer's colour scheme: the dark capture
+// is served under prefers-color-scheme: dark, the light one otherwise.
+import type { ImageMetadata } from 'astro';
+import { getImage } from 'astro:assets';
+
+interface Props {
+  light: ImageMetadata;
+  dark: ImageMetadata;
+  alt: string;
+  /** Image widths to generate (include 2× sizes for high-density screens). */
+  widths: number[];
+  sizes: string;
+  priority?: boolean;
+  class?: string;
+}
+
+const { light, dark, alt, widths, sizes, priority = false, class: className } = Astro.props;
+const formats = ['avif', 'webp'] as const;
+
+async function srcset(image: ImageMetadata, format: (typeof formats)[number]) {
+  const usable = widths.filter((width) => width <= image.width);
+  const images = await Promise.all(usable.map((width) => getImage({ src: image, width, format })));
+  return images.map((img, i) => `${img.src} ${usable[i]}w`).join(', ');
+}
+
+const sources = await Promise.all(
+  formats.flatMap((format) => [
+    srcset(dark, format).then((set) => ({ format, set, media: '(prefers-color-scheme: dark)' })),
+    srcset(light, format).then((set) => ({ format, set, media: undefined })),
+  ]),
+);
+const fallback = await getImage({ src: light, width: Math.min(widths.at(-1)!, light.width), format: 'webp' });
+---
+
+<picture>
+  {sources.map((source) => <source type={`image/${source.format}`} media={source.media} srcset={source.set} sizes={sizes} />)}
+  <img
+    src={fallback.src}
+    alt={alt}
+    width={light.width}
+    height={light.height}
+    loading={priority ? 'eager' : 'lazy'}
+    fetchpriority={priority ? 'high' : 'auto'}
+    decoding="async"
+    class={className}
+  />
+</picture>
