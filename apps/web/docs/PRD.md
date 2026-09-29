@@ -115,7 +115,7 @@ Google Play requires a public web page explaining account deletion.
 - Fallback: email app@jaminly.app from the account's address, for users who no longer have the app.
 
 ### 5.5 404
-Friendly message, link home, same header and footer. Shown in the language of the path (`/ms/...` → Malay), English otherwise.
+Friendly message and link home in **both** languages side by side, same header and footer. A static host serves one `404.html` for every missing path, so the page can't pick a language from the URL without JavaScript. `noindex`, no canonical, left out of the sitemap.
 
 ### 5.6 Languages (i18n)
 
@@ -231,7 +231,7 @@ Still open:
 | Phase | Scope |
 |---|---|
 | **W0 — Scaffold** ✅ | Fresh Astro in `apps/web`, builds in the workspace. |
-| **W1 — Foundation** | Tailwind v4, tokens, font, i18n routing and dictionaries, base layout, SEO component (with `hreflang`), header with language switcher, footer, 404. |
+| **W1 — Foundation** ✅ | Tailwind v4, tokens, font, i18n routing and dictionaries, base layout, SEO component (with `hreflang`), header with language switcher, footer, 404. |
 | **W2 — Legal** | Privacy, terms and delete-account pages with the content in §7, in English and Malay. (Can ship before the landing page: stores only need these URLs.) |
 | **W3 — Landing page** | All Home sections in both languages, real app screenshots, photo placeholders, FAQ with JSON-LD. |
 | **W4 — Polish & launch** | OG images, sitemap, robots, Lighthouse ≥ 95, taste-skill pre-flight check, deploy to Vercel on `jaminly.app` (§9.1), switch the app's `links.ts`, Search Console. |

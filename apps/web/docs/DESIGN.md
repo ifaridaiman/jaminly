@@ -67,10 +67,12 @@ The app uses system fonts so it has nothing to load. The website is different: i
 - No mono font. The one command snippet in the open-source section uses `ui-monospace, SFMono-Regular, Menlo, monospace`.
 - Emphasis inside a headline uses the same family at a heavier weight, never a second family.
 - Numbers (dates, "12 days") use `font-variant-numeric: tabular-nums`.
+- `word-spacing: 0.05em` site-wide: Plus Jakarta Sans has a narrow word space that makes small text run together.
+- Sizes are fluid (`clamp()`), so there are no per-breakpoint font classes. Tokens live in `src/styles/global.css`; Tailwind's default colours, radii and font sizes are cleared so only these exist.
 
 | Style | Size (mobile → desktop) / line height | Weight | Tracking | Use |
 |---|---|---|---|---|
-| `display` | 40 → 60 px / 1.05 | 750 | -0.03em | hero `<h1>` only |
+| `display` | 40 → 60 px / 1.05 | 750 | -0.025em | hero `<h1>` only |
 | `h2` | 30 → 40 px / 1.15 | 700 | -0.02em | section headlines |
 | `h3` | 20 → 22 px / 1.3 | 650 | -0.01em | bento cell titles, FAQ questions |
 | `lead` | 18 → 20 px / 1.55 | 400 | 0 | hero subtext, section intros |

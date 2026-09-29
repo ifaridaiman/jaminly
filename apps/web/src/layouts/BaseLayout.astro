@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+import fontUrl from '@fontsource-variable/plus-jakarta-sans/files/plus-jakarta-sans-latin-wght-normal.woff2?url';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Seo, { type SeoProps } from '../components/Seo.astro';
+import { localeMeta } from '../i18n/config';
+import { getLocale, t } from '../i18n/utils';
+
+type Props = SeoProps;
+
+const locale = getLocale(Astro.currentLocale);
+const strings = t(locale);
+---
+
+<!doctype html>
+<html lang={localeMeta[locale].hreflang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafb" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0b0c0e" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href={fontUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <Seo {...Astro.props} />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only z-50 rounded-md bg-primary px-4 py-3 font-semibold text-on-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+    >
+      {strings.site.skipToContent}
+    </a>
+    <Header />
+    <main id="main" tabindex="-1" class="flex-1 focus:outline-none">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

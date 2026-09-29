@@ -1,0 +1,49 @@
+---
+// Per-page metadata (PRD §6): title, description, canonical, hreflang, OG/Twitter, JSON-LD.
+import { defaultLocale, localeMeta, locales } from '../i18n/config';
+import { alternates, getLocale } from '../i18n/utils';
+
+export interface SeoProps {
+  title: string;
+  description: string;
+  /** Locale-neutral path of this page, e.g. `/` or `/privacy`. */
+  path: string;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const { title, description, path, noindex = false, jsonLd } = Astro.props as SeoProps;
+const locale = getLocale(Astro.currentLocale);
+const links = alternates(path);
+const canonical = links.find((link) => link.locale === locale)!.href;
+const xDefault = links.find((link) => link.locale === defaultLocale)!.href;
+const siteName = 'Jaminly';
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+
+{
+  !noindex &&
+    links.map((link) => (
+      <link rel="alternate" hreflang={localeMeta[link.locale].hreflang} href={link.href} />
+    ))
+}
+{!noindex && <link rel="alternate" hreflang="x-default" href={xDefault} />}
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={localeMeta[locale].ogLocale} />
+{
+  locales
+    .filter((other) => other !== locale)
+    .map((other) => <meta property="og:locale:alternate" content={localeMeta[other].ogLocale} />)
+}
+<!-- Switch to summary_large_image with og:image once OG images are generated in W4 (DESIGN §6). -->
+<meta name="twitter:card" content="summary" />
+
+{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}

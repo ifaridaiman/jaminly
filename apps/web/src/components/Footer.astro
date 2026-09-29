@@ -1,0 +1,77 @@
+---
+import Logo from '../assets/logo/jaminly-mark.svg';
+import { getLocale, localizedPath, t } from '../i18n/utils';
+import { anchors, CONTACT_EMAIL, LICENSE_URL, REPO_URL } from '../lib/site';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+const locale = getLocale(Astro.currentLocale);
+const strings = t(locale);
+const home = localizedPath(locale, '/');
+const year = new Date().getFullYear();
+
+const groups = [
+  {
+    title: strings.footer.product,
+    links: [
+      { href: `${home}#${anchors.features}`, label: strings.nav.features },
+      { href: `${home}#${anchors.faq}`, label: strings.nav.faq },
+      { href: `${home}#${anchors.getApp}`, label: strings.cta.getApp },
+    ],
+  },
+  {
+    title: strings.footer.legal,
+    links: [
+      { href: localizedPath(locale, '/privacy'), label: strings.footer.privacyPolicy },
+      { href: localizedPath(locale, '/terms'), label: strings.footer.terms },
+      { href: localizedPath(locale, '/delete-account'), label: strings.footer.deleteAccount },
+    ],
+  },
+  {
+    title: strings.footer.project,
+    links: [
+      { href: REPO_URL, label: strings.nav.github },
+      { href: LICENSE_URL, label: strings.footer.license },
+      { href: `mailto:${CONTACT_EMAIL}`, label: CONTACT_EMAIL },
+    ],
+  },
+];
+---
+
+<footer class="mt-auto border-t border-border">
+  <div class="container-page grid gap-10 py-14 md:grid-cols-12 md:gap-6">
+    <div class="md:col-span-4">
+      <a href={home} class="-ml-1 inline-flex min-h-11 items-center gap-2 rounded-sm px-1">
+        <Logo width={24} height={24} aria-hidden="true" />
+        <span class="font-bold">{strings.site.name}</span>
+      </a>
+      <p class="mt-2 max-w-[32ch] text-small text-text-secondary">{strings.footer.tagline}</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-8">
+      {
+        groups.map((group) => (
+          <div>
+            <h2 class="text-small font-semibold text-text">{group.title}</h2>
+            <ul class="mt-2">
+              {group.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    class="inline-flex min-h-11 items-center text-small text-text-secondary transition-colors hover:text-text"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="container-page flex flex-col-reverse gap-2 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">
+    <p class="text-small text-text-secondary">© {year} {strings.footer.rights}</p>
+    <LanguageSwitcher variant="full" class="-ml-2 sm:ml-0 sm:-mr-2" />
+  </div>
+</footer>

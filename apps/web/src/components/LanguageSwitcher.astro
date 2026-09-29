@@ -1,0 +1,39 @@
+---
+// Plain links to the same page in each language (PRD I18N-5, DESIGN §4).
+import { locales, localeMeta } from '../i18n/config';
+import { getLocale, localizedPath, neutralPath, t } from '../i18n/utils';
+
+interface Props {
+  variant?: 'compact' | 'full';
+  class?: string;
+}
+
+const { variant = 'compact', class: className } = Astro.props;
+const current = getLocale(Astro.currentLocale);
+const path = neutralPath(Astro.url.pathname);
+const strings = t(current);
+---
+
+<nav aria-label={strings.nav.language} class:list={['flex items-center gap-1', className]}>
+  {
+    locales.map((locale) => {
+      const meta = localeMeta[locale];
+      const isCurrent = locale === current;
+      return (
+        <a
+          href={localizedPath(locale, path)}
+          hreflang={meta.hreflang}
+          lang={meta.hreflang}
+          aria-label={variant === 'compact' ? meta.name : undefined}
+          aria-current={isCurrent ? 'true' : undefined}
+          class:list={[
+            'inline-flex min-h-11 items-center rounded-sm px-2 text-small transition-colors',
+            isCurrent ? 'font-semibold text-text' : 'text-text-secondary hover:text-text',
+          ]}
+        >
+          {variant === 'compact' ? meta.short : meta.name}
+        </a>
+      );
+    })
+  }
+</nav>

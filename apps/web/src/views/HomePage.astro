@@ -1,0 +1,59 @@
+---
+// Home (PRD §5.1). W1 ships the hero copy only; the remaining sections,
+// screenshots and photos land in W3.
+import Button from '../components/Button.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLocale, localizedPath, t } from '../i18n/utils';
+import { anchors, REPO_URL } from '../lib/site';
+
+const locale = getLocale(Astro.currentLocale);
+const strings = t(locale);
+const home = localizedPath(locale, '/');
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Jaminly',
+    description: strings.home.description,
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'iOS, Android, Web',
+    inLanguage: locale,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'MYR' },
+    license: 'https://opensource.org/licenses/MIT',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Jaminly',
+    url: Astro.site?.href,
+    logo: new URL('/apple-touch-icon.png', Astro.site).href,
+    email: 'app@jaminly.app',
+    sameAs: [REPO_URL],
+  },
+];
+---
+
+<BaseLayout title={strings.home.title} description={strings.home.description} path="/" jsonLd={jsonLd}>
+  <section class="container-page grid items-center gap-12 pb-20 pt-16 md:pt-24 lg:min-h-[calc(100dvh-4rem)] lg:grid-cols-12">
+    <div class="lg:col-span-8 xl:col-span-7">
+      <h1 class="rise text-display text-balance">{strings.home.headline}</h1>
+      <p class="rise mt-6 max-w-[46ch] text-lead text-text-secondary" style="--i: 1">
+        {strings.home.lead}
+      </p>
+      <div class="rise mt-10 flex flex-col gap-3 sm:flex-row" style="--i: 2">
+        <Button href={`${home}#${anchors.getApp}`}>{strings.cta.getApp}</Button>
+        <Button href={REPO_URL} variant="secondary">{strings.cta.viewGithub}</Button>
+      </div>
+    </div>
+
+    <!-- TODO(W3): real app screenshots (DESIGN §5.2, §6). -->
+    <div
+      class="rise flex aspect-[390/844] w-full max-w-[20rem] items-center justify-center justify-self-center rounded-lg border border-dashed border-border bg-bg-elevated p-6 text-center text-small text-text-secondary lg:col-span-4 xl:col-span-5"
+      style="--i: 4"
+      aria-hidden="true"
+    >
+      App screenshot · W3
+    </div>
+  </section>
+</BaseLayout>

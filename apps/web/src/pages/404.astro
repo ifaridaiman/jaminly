@@ -1,0 +1,40 @@
+---
+// Static hosts serve a single 404.html for every missing path, so this page
+// shows both languages instead of guessing (PRD §5.5).
+import { Icon } from 'astro-icon/components';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { locales, localeMeta } from '../i18n/config';
+import { localizedPath, t } from '../i18n/utils';
+
+const en = t('en');
+---
+
+<BaseLayout title={`${en.notFound.title} · Jaminly`} description={en.notFound.body} path="/404" noindex>
+  <section class="container-page py-24 md:py-32">
+    <div class="grid max-w-3xl gap-12 md:grid-cols-2">
+      {
+        locales.map((locale) => {
+          const strings = t(locale);
+          return (
+            <div lang={localeMeta[locale].hreflang}>
+              {locale === 'en' ? (
+                <h1 class="text-h2">{strings.notFound.title}</h1>
+              ) : (
+                <p class="text-h2">{strings.notFound.title}</p>
+              )}
+              <p class="mt-4 text-lead text-text-secondary">{strings.notFound.body}</p>
+              <a
+                href={localizedPath(locale, '/')}
+                hreflang={localeMeta[locale].hreflang}
+                class="mt-6 inline-flex min-h-11 items-center gap-2 font-semibold text-primary hover:text-primary-hover"
+              >
+                {strings.notFound.home}
+                <Icon name="ph:arrow-right" size={18} aria-hidden="true" />
+              </a>
+            </div>
+          );
+        })
+      }
+    </div>
+  </section>
+</BaseLayout>

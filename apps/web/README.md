@@ -1,51 +1,40 @@
-# Astro Starter Kit: Minimal
+# jaminly-web
 
-```sh
-npm create astro@latest -- --template minimal
+The Jaminly website: landing page and legal pages (privacy, terms, account deletion), in English and Bahasa Melayu. Static Astro site, no backend.
+
+- Plan: [`docs/PRD.md`](docs/PRD.md)
+- Design: [`docs/DESIGN.md`](docs/DESIGN.md) (follows the `design-taste-frontend` skill in `.claude/skills/`)
+
+## Commands
+
+Run from the repo root:
+
+```bash
+pnpm --filter jaminly-web dev       # http://localhost:4321
+pnpm --filter jaminly-web check     # type-check .astro and .ts files
+pnpm --filter jaminly-web build     # static output in apps/web/dist
+pnpm --filter jaminly-web preview   # serve the built site
 ```
 
-<!-- ASTRO:REMOVE:START -->
+## Layout
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/minimal)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/minimal)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/minimal/devcontainer.json)
-
-<!-- ASTRO:REMOVE:END -->
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```
+src/
+  styles/global.css     design tokens (colours, type, radii) + Tailwind v4
+  i18n/                 locale config, en.ts / ms.ts dictionaries, URL helpers
+  layouts/BaseLayout    <html>, <head>, header, footer
+  components/           Seo, Header, Footer, Button, LanguageSwitcher
+  views/                page bodies shared by every language
+  pages/                routes: `/` (English) and `/ms/` (Malay) render the same view
+  assets/photos/        drop owner-supplied photos here (see its README)
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Adding text
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Add the string to `src/i18n/en.ts` and the same key to `src/i18n/ms.ts`. A key missing from either language fails `pnpm check`.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Adding a page
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+1. Put the page body in `src/views/`.
+2. Add a thin route in `src/pages/` and `src/pages/ms/` that renders it.
+3. Pass the locale-neutral `path` (e.g. `/privacy`) to `BaseLayout` so canonical and `hreflang` links are correct.

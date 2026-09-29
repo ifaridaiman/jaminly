@@ -1,0 +1,106 @@
+---
+import { Icon } from 'astro-icon/components';
+import Logo from '../assets/logo/jaminly-mark.svg';
+import { getLocale, localizedPath, t } from '../i18n/utils';
+import { anchors, REPO_URL } from '../lib/site';
+import Button from './Button.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+
+const locale = getLocale(Astro.currentLocale);
+const strings = t(locale);
+const home = localizedPath(locale, '/');
+
+const links = [
+  { href: `${home}#${anchors.features}`, label: strings.nav.features },
+  { href: `${home}#${anchors.privacy}`, label: strings.nav.privacy },
+  { href: `${home}#${anchors.faq}`, label: strings.nav.faq },
+  { href: REPO_URL, label: strings.nav.github, external: true },
+];
+const ctaHref = `${home}#${anchors.getApp}`;
+---
+
+<header class="site-header sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur-md">
+  <div class="container-page flex h-16 items-center gap-6">
+    <a href={home} class="-ml-1 flex min-h-11 items-center gap-2 rounded-sm px-1">
+      <Logo width={28} height={28} aria-hidden="true" />
+      <span class="text-h3 font-bold">{strings.site.name}</span>
+    </a>
+
+    <nav aria-label={strings.nav.label} class="ml-auto hidden lg:block">
+      <ul class="flex items-center gap-1">
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-small text-text-secondary transition-colors hover:text-text"
+                {...(link.external ? { rel: 'noopener' } : {})}
+              >
+                {link.external && <Icon name="ph:github-logo" size={18} aria-hidden="true" />}
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div class="ml-auto flex items-center gap-2 lg:ml-0">
+      <LanguageSwitcher class="hidden sm:flex" />
+      <Button href={ctaHref} size="sm">{strings.cta.getApp}</Button>
+
+      <details class="menu relative lg:hidden">
+        <summary
+          class="flex size-11 cursor-pointer list-none items-center justify-center rounded-sm text-text hover:bg-bg-elevated"
+          aria-label={strings.nav.menu}
+        >
+          <Icon name="ph:list" size={24} aria-hidden="true" class="menu-open" />
+          <Icon name="ph:x" size={24} aria-hidden="true" class="menu-close" />
+        </summary>
+        <div
+          class="absolute right-0 top-full mt-2 w-64 rounded-lg border border-border bg-bg p-2 shadow-[0_24px_60px_-20px_color-mix(in_srgb,var(--primary)_20%,transparent)]"
+        >
+          <nav aria-label={strings.nav.label}>
+            <ul>
+              {
+                links.map((link) => (
+                  <li>
+                    <a
+                      href={link.href}
+                      class="flex min-h-11 items-center gap-2 rounded-sm px-3 text-body hover:bg-bg-elevated"
+                      {...(link.external ? { rel: 'noopener' } : {})}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </nav>
+          <LanguageSwitcher variant="full" class="mt-2 border-t border-border pt-2 sm:hidden" />
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<style>
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+  .menu .menu-close,
+  .menu[open] .menu-open {
+    display: none;
+  }
+  .menu[open] .menu-close {
+    display: block;
+  }
+
+  /* Solid header when the user asks for less transparency (DESIGN §4). */
+  @media (prefers-reduced-transparency: reduce) {
+    .site-header {
+      background-color: var(--bg);
+      backdrop-filter: none;
+    }
+  }
+</style>

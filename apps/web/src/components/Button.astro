@@ -1,0 +1,27 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+// DESIGN §4: always a link, label ≤ 3 words and never wraps.
+interface Props extends HTMLAttributes<'a'> {
+  variant?: 'primary' | 'secondary';
+  size?: 'md' | 'sm';
+}
+
+const { variant = 'primary', size = 'md', class: className, ...attrs } = Astro.props;
+---
+
+<a
+  class:list={[
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold',
+    'transition-[background-color,border-color,transform] duration-150 ease-out active:scale-[0.98]',
+    'motion-reduce:transition-none motion-reduce:active:scale-100',
+    size === 'md' ? 'min-h-12 px-5 text-body' : 'min-h-11 px-4 text-small',
+    variant === 'primary'
+      ? 'bg-primary text-on-primary hover:bg-primary-hover'
+      : 'border border-border bg-bg text-text hover:border-text-secondary hover:bg-bg-elevated',
+    className,
+  ]}
+  {...attrs}
+>
+  <slot />
+</a>
